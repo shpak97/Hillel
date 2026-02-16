@@ -1,12 +1,10 @@
-// Єдине джерело правди - базові шляхи (без початкового слешу)
 export const ROUTE_PATHS = {
-  home: '', // index route
+  home: '',
   games: 'games',
-  gameDetail: ':slug', // динамічний параметр
+  gameDetail: ':slug',
   contacts: 'contacts',
 } as const;
 
-// Функції для генерації повних шляхів (з /)
 export const getRoute = (path: string) => path === '' ? '/' : `/${path}`;
 
 export const ROUTES = {
