@@ -1,5 +1,5 @@
 import GameCard from './GameCard'
-import type { IGame } from '../../../utils/types/game';
+import type { IGame } from '../../../utils/types/interfaces';
 
 interface GameCardsGridProps {
   games: IGame[];
