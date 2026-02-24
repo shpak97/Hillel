@@ -69,7 +69,7 @@ export default function GameDetail() {
         <Button onClick={() => setSearchParams({ booking: 'true' })} type='button'>
           Взяти участь
         </Button>
-        {searchParams.get('booking') && <Popup />}
+        {searchParams.get('booking') && <Popup maxPlayersCount={maxPlayersCount} />}
     </Main>
   );
 }

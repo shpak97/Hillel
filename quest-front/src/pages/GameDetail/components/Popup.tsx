@@ -1,7 +1,11 @@
 import { useSearchParams } from 'react-router';
 import Form from './Form';
 
-export default function Popup() {
+interface PopupProps {
+  maxPlayersCount: number;
+}
+
+export default function Popup({ maxPlayersCount }: PopupProps) {
   const [, setSearchParams] = useSearchParams();
 
   const handleClose = () => {
@@ -48,7 +52,7 @@ export default function Popup() {
         >
           Заявка на гру
         </h2>
-        <Form />
+        <Form maxPlayersCount={maxPlayersCount} />
       </div>
     </div>
   );
