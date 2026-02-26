@@ -10,15 +10,17 @@ function createFormSchema(maxPlayersCount: number) {
   return z.object({
     user_name: z.string().min(1, "Обов'язкове поле").max(20, "Максимум 20 символів"),
     user_phone: z.string().min(1, "Обов'язкове поле").max(13, "Максимум 13 символів"),
-    users_count: z.coerce
+    users_count: z.
+    coerce
       .number()
       .min(0, "Мінімум 0")
       .max(maxPlayersCount, `Максимум ${maxPlayersCount} гравців`),
     privacy_policy: z.boolean().refine((v) => v === true, "Потрібна згода з політикою"),
-  });
+  })
 }
 
 type FormInput = z.infer<ReturnType<typeof createFormSchema>>;
+
 
 interface FormProps {
   maxPlayersCount: number;
@@ -30,6 +32,7 @@ export default function Form({ maxPlayersCount }: FormProps) {
   const { register, handleSubmit, formState: { errors } } = useForm<FormInput>({
     resolver,
     defaultValues: { user_name: "", user_phone: "", users_count: 0, privacy_policy: false },
+
   });
 
   const onSubmit: SubmitHandler<FormInput> = (data) => console.log(data);

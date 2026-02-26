@@ -12,7 +12,7 @@ import PuzzleIcon from '../../assets/icons/Puzzle';
 import TimeIcon from '../../assets/icons/Time';
 import Button from '../../components/Button';
 import { useSearchParams } from 'react-router';
-import Popup from './components/Popup';
+import { useBookingGamePopup } from '../../utils/hooks/useBookingGamePopup';
 
 const fetchGame = async (id: IGame['id']): Promise<IGame | undefined> => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -23,6 +23,11 @@ export default function GameDetail() {
   const { slug } = useParams<{ slug?: string }>();
   const [game, setGame] = useState<IGame | null | 'not-found'>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const bookingPopup = useBookingGamePopup(
+    game && game !== 'not-found' ? game.maxPlayersCount : 0,
+    !!searchParams.get('booking')
+  );
 
 
   useEffect(() => {
@@ -69,7 +74,7 @@ export default function GameDetail() {
         <Button onClick={() => setSearchParams({ booking: 'true' })} type='button'>
           Взяти участь
         </Button>
-        {searchParams.get('booking') && <Popup maxPlayersCount={maxPlayersCount} />}
+        {bookingPopup}
     </Main>
   );
 }
