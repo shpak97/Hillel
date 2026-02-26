@@ -5,8 +5,12 @@
   --color-accent: #FEC432;
   --color-orange: #F2890F;
   --color-gray: #A6A6A6;
+  --color-dark-gray: #514321;
   --color-light-gray: #E6E6E6;
   --color-white: #FFFFFF;
+  --color-border-gray: #615E5C;
+  --color-black: #270B00;
+  --color-input-gray: #535353;
 
   /* Typography */
   --font-family-raleway: Raleway, sans-serif;

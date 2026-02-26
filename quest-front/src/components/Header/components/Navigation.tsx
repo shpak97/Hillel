@@ -1,10 +1,10 @@
 import { useRef } from 'react'
 import { NavLink } from 'react-router'
-import { NAVIGATION_ITEMS, ROUTES } from '../../../constants/routes'
+import { NAVIGATION_ITEMS, ROUTES } from '../../../utils/constants/routes'
 
 const prefetchMap: Record<string, () => Promise<unknown>> = {
-  [ROUTES.contacts]: () => import('../../../pages/Contacts'),
-  [ROUTES.home]: () => import('../../../pages/Home'),
+  [ROUTES.contacts]: () => import('../../../pages/Contact/Contact'),
+  [ROUTES.home]: () => import('../../../pages/Home/Home'),
 }
 
 export default function Navigation() {
