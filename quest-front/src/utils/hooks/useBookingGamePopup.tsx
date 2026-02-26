@@ -1,4 +1,3 @@
-import React from "react";
 import { createPortal } from "react-dom";
 import Popup from "../../pages/GameDetail/components/Popup";
 
