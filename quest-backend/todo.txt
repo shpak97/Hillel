@@ -1,0 +1,31 @@
+1. репозиторії перейменувати на data-services а файл на games.data-service.js
+2. зробити туду
+3. Зробити пагінацію з параметрами поточної сторінки і всіх
+4. // schema
+const Game = z.object({ 
+  id: z.string(),
+  title: z.string(),
+  minPlayersCount: z.number(),
+  maxPlayersCount: z.number(),
+  complexity: z.string(),
+  category: z.string(),
+  imageSmall: z.string(),
+  imageLarge: z.string(),
+  description: z.string(),
+  time: z.string()
+});
+
+const validate = (data, schema, prior) => {
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    logger.error(result.error);
+    return result.error;
+  } else {
+    return result.data;
+  }
+}
+
+validate({ username: 42, xp: "100" }, Player);
+
+
+5. Випиляти пут

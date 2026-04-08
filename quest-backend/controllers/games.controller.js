@@ -27,7 +27,7 @@ export async function createGame(req, res) {
   const body = await readJsonBody(req);
 
   // Заглушкова валідація
-  if (!body?.title) return sendJson(res, 400, { error: "Field 'title' is required" });
+  if (!body?.title) return sendJson(res, 400, { error: "Field 'title' is required" }); // todo: move to service
 
   const created = await gamesService.createGame(body);
   // 201 + Location — гарна практика
@@ -42,7 +42,7 @@ export async function replaceGame(req, res, params) {
   const body = await readJsonBody(req);
 
   // Для PUT зазвичай очікуємо “повний” об’єкт (у нас мінімум title)
-  if (!body?.title) return sendJson(res, 400, { error: "Field 'title' is required" });
+  if (!body?.title) return sendJson(res, 400, { error: "Field 'title' is required" }); // todo: move to service
 
   const updated = await gamesService.replaceGame(params.id, body);
   if (!updated) return sendJson(res, 404, { error: "Game not found" });
@@ -57,7 +57,7 @@ export async function updateGame(req, res, params) {
   const patch = await readJsonBody(req);
 
   if (!patch || typeof patch !== "object") {
-    return sendJson(res, 400, { error: "Invalid JSON body" });
+    return sendJson(res, 400, { error: "Invalid JSON body" }); // todo: move to service
   }
 
   const updated = await gamesService.updateGame(params.id, patch);

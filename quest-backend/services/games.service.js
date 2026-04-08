@@ -51,12 +51,12 @@ export async function replaceGame(id, data) {
 
   for (const field of requiredFields) {
     if (data[field] === undefined) {
-      throw new Error(`Field '${field}' is required for PUT`);
+      throw new HttpError(400, `Field '${field}' is required for PUT`);
     }
   }
 
   if (data.minPlayersCount > data.maxPlayersCount) {
-    throw new Error("minPlayersCount cannot be greater than maxPlayersCount");
+    throw new HttpError(400, "minPlayersCount cannot be greater than maxPlayersCount");
   }
 
   const replaced = {
@@ -87,7 +87,7 @@ export async function updateGame(id, patch) {
   };
 
   if (updated.minPlayersCount > updated.maxPlayersCount) {
-    throw new Error("minPlayersCount cannot be greater than maxPlayersCount");
+    throw new HttpError(400, "minPlayersCount cannot be greater than maxPlayersCount");
   }
 
   await repo.replace(id, updated);
