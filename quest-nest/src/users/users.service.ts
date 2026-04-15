@@ -1,75 +1,98 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { isPrismaErrorCode } from 'src/common/utils/prisma-error.util';
 import { Prisma } from '@prisma/client';
-import { PrismaService } from '../prisma.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { QueryUsersDto } from './dto/query-users.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { IQueryUsers, QueryUsersDto } from './dto/query-users.dto';
+import { IUpdateUser } from './dto/update-user.dto';
+import { UsersData } from './users.data';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly usersData: UsersData) {}
 
-  create(createUserDto: CreateUserDto) {
-    const data: Prisma.UserCreateInput = {
-      email: createUserDto.email,
-      phone: createUserDto.phone,
-      fullname: createUserDto.fullname,
-      meta: createUserDto.meta as Prisma.InputJsonValue | undefined,
-    };
+  findAll(query: QueryUsersDto) {
+    const { skip, take, filters } = this.parseListQuery(query);
+    const where = this.buildUserWhere(filters);
 
-    return this.prisma.user.create({
-      data,
+    return this.usersData.findMany({
+      skip,
+      take,
+      where,
     });
   }
 
-  findAll(query: QueryUsersDto) {
-    const skip = query.skip ?? undefined;
-    const take = query.take ?? undefined;
+  private buildUserWhere(
+    filters: Record<string, string>,
+  ): Prisma.UserWhereInput {
+    const where: Record<string, { contains: string }> = {};
 
-    return this.prisma.user.findMany({
-      skip,
-      take,
-      where: {
-        email: query.email
-          ? {
-              contains: query.email,
-              mode: 'insensitive',
-            }
-          : undefined,
-        fullname: query.fullname
-          ? {
-              contains: query.fullname,
-              mode: 'insensitive',
-            }
-          : undefined,
-      },
-      orderBy: { id: 'asc' },
-    });
+    for (const [key, value] of Object.entries(filters)) {
+      if (!value) continue;
+      where[key] = { contains: value };
+    }
+
+    return where as Prisma.UserWhereInput;
+  }
+
+  private parseListQuery(query: IQueryUsers): {
+    skip: number;
+    take: number;
+    filters: Record<string, string>;
+  } {
+    const { skip, take, ...rest } = query;
+
+    const first = (v: unknown): string | undefined => {
+      if (typeof v === 'string') return v;
+      if (Array.isArray(v) && typeof v[0] === 'string') return v[0];
+      return undefined;
+    };
+
+    const filters: Record<string, string> = {};
+    for (const [key, raw] of Object.entries(rest)) {
+      const s = first(raw);
+      if (s == null || s === '') continue;
+      filters[key] = s.toLowerCase();
+    }
+
+    return {
+      skip: skip ?? 0,
+      take: take ?? 10,
+      filters,
+    };
   }
 
   async findOne(id: number) {
-    const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) throw new NotFoundException(`User ${id} not found`);
+    const user = await this.usersData.findUnique({ id });
+    if (!user)
+      throw new NotFoundException(
+        `[USER_NOT_FOUND]: User not found during findOne`,
+      );
     return user;
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
-    await this.findOne(id);
+  async update(id: number, updateUserDto: IUpdateUser) {
     const data: Prisma.UserUpdateInput = {
-      email: updateUserDto.email,
       phone: updateUserDto.phone,
       fullname: updateUserDto.fullname,
-      meta: updateUserDto.meta as Prisma.InputJsonValue | undefined,
     };
 
-    return this.prisma.user.update({
-      where: { id },
-      data,
-    });
+    try {
+      return await this.usersData.update({ id }, data);
+    } catch (e: unknown) {
+      if (isPrismaErrorCode(e, 'P2025')) {
+        throw new BadRequestException(`User id is not valid`);
+      }
+      throw e;
+    }
   }
 
   async remove(id: number) {
-    await this.findOne(id);
-    return this.prisma.user.delete({ where: { id } });
+    const { count } = await this.usersData.remove({ id });
+    if (count === 0) {
+      throw new NotFoundException(`User ${id} not found`);
+    }
   }
 }

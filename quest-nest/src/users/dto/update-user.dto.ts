@@ -1,6 +1,24 @@
-export class UpdateUserDto {
-  email?: string;
+import {
+  IsOptional,
+  IsString,
+  IsPhoneNumber,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
+
+export interface IUpdateUser {
   phone?: string;
   fullname?: string;
-  meta?: Record<string, unknown>;
+}
+
+export class UpdateUserDto implements IUpdateUser {
+  @IsString()
+  @IsPhoneNumber()
+  @IsOptional()
+  phone?: string;
+  @IsString()
+  @MinLength(3)
+  @MaxLength(255)
+  @IsOptional()
+  fullname?: string;
 }

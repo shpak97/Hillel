@@ -7,6 +7,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator json {
+  provider = "prisma-json-types-generator"
+}
+
 datasource db {
   provider = "postgresql"
 }
@@ -16,6 +20,7 @@ model User {
   email    String @unique
   phone    String?
   fullname String?
+  /// [UserMeta]
   meta     Json?  @db.JsonB
 
   @@map("user")
