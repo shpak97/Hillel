@@ -1,0 +1,5 @@
+export const TOKEN_TYPE = {
+  ACCESS_TOKEN: 'access_token',
+  REFRESH_TOKEN: 'refresh_token',
+  EMAIL_TOKEN: 'email_token',
+} as const;

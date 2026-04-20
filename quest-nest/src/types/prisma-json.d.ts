@@ -5,6 +5,8 @@ declare global {
     type UserMeta = {
       password: string;
       accessToken?: string;
+      emailVerified?: boolean;
+      verifyEmailLastSentAt?: number;
     };
   }
 }
