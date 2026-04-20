@@ -1,0 +1,47 @@
+curl -sS -X POST http://localhost:3000/users \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"user@example.com","phone":"+380501112233","fullname":"Test User","meta":{"role":"guest"}}' \
+  -w '\nHTTP %{http_code}\n'
+
+
+  # перші 10 записів
+curl -sS 'http://localhost:3000/users?skip=0&take=10'
+
+# пошук по полях моделі (приклад: email, phone, fullname)
+curl -sS 'http://localhost:3000/users?skip=0&take=20&email=EXAMPLE&phone=380'
+
+curl -sS http://localhost:3000/users/10
+curl -sS -X PATCH http://localhost:3000/users/2 \
+  -H 'Content-Type: application/json' \
+  -d '{"phone":"+380991112233","fullname":"New Name"}'
+  curl -sS -o /dev/null -w '%{http_code}\n' -X DELETE http://localhost:3000/users/2
+
+  curl -sS -X POST http://localhost:3000/auth/register \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"user5@example.com","phone":"+380501112233","fullname":"Test User","password":"12345678"}' \
+  -w '\nHTTP %{http_code}\n'
+
+    curl -sS -X POST http://localhost:3000/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"user5@example.com","phone":"+380501112233","password":"12345678"}' \
+  -w '\nHTTP %{http_code}\n'
+
+  curl -sS -X GET http://localhost:3000/orders \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjE3LCJpYXQiOjE3NzY1MzIxNDMsImV4cCI6MTc3NjYxODU0M30.afvD01L8tuo7KoS7CcGMMu8HJBlIg6y7BJSkcPWWK8I' \
+  -w '\nHTTP %{http_code}\n'
+
+  Як веріфікувати юзера по емейлу (сендгрід)
+  doman/aut/kjsdkjdsjjksdkj
+  send in email
+  localhost:3000/verivy?token='awdawdawdawdd'
+  localhost:8000/verify-email
+-H 
+
+
+privider sendGrid (factory паттерн)
+meta{
+  password
+  access_token
+  isverify: true/false
+  verify_email_token
+} 

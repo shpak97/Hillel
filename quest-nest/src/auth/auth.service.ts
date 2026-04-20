@@ -8,22 +8,25 @@ import { RegisterRequestDto } from './dto/register-request.dto';
 import { Prisma, User } from '@prisma/client';
 import { UsersData } from 'src/users/users.data';
 import bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly usersData: UsersData) {}
+  constructor(
+    private readonly usersData: UsersData,
+    private readonly jwtService: JwtService,
+  ) {}
 
-  async login(loginRequestDto: LoginRequestDto): Promise<User | undefined> {
+  async login(
+    loginRequestDto: LoginRequestDto,
+  ): Promise<{ accessToken: string }> {
     const user = await this.usersData.findUnique({
       email: loginRequestDto.email,
     });
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    const passwordHash = this.getHashedPasswordFromMeta(user.meta);
-    if (!passwordHash) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+    const { password: passwordHash } = user.meta as PrismaJson.UserMeta;
 
     const isValidPassword = await this.comparePassword(
       loginRequestDto.password,
@@ -32,7 +35,18 @@ export class AuthService {
     if (!isValidPassword) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    return user;
+    const accessToken = await this.jwtService.signAsync({
+      uid: user.id,
+      type: 'access_token',
+    });
+    if (!accessToken) {
+      throw new UnauthorizedException('Failed to generate access token');
+    }
+    await this.usersData.update(
+      { id: user.id },
+      { meta: { ...user.meta, accessToken } as PrismaJson.UserMeta },
+    );
+    return { accessToken };
   }
 
   async register(registerRequestDto: RegisterRequestDto): Promise<void> {
@@ -58,16 +72,5 @@ export class AuthService {
     passwordHash: string,
   ): Promise<boolean> {
     return await bcrypt.compare(plainPassword, passwordHash);
-  }
-
-  private getHashedPasswordFromMeta(
-    meta: Prisma.JsonValue | null,
-  ): string | null {
-    if (typeof meta !== 'object' || meta === null || Array.isArray(meta)) {
-      return null;
-    }
-
-    const password = (meta as { password?: unknown }).password;
-    return typeof password === 'string' ? password : null;
   }
 }
