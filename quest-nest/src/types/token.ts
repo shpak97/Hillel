@@ -1,5 +1,11 @@
 export const TOKEN_TYPE = {
-  ACCESS_TOKEN: 'access_token',
-  REFRESH_TOKEN: 'refresh_token',
-  EMAIL_TOKEN: 'email_token',
+  ACCESS: 'access',
+  REFRESH: 'refresh',
+  EMAIL: 'email',
+  PASSWORD_RESET: 'password_reset',
 } as const;
+
+export interface ITokenPayload {
+  uid: string;
+  type: (typeof TOKEN_TYPE)[keyof typeof TOKEN_TYPE];
+}

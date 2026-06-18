@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RestoQR - Дашборд без ресторану</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+        --color-ink-950: #171512;
+        --color-ink-800: #34302a;
+        --color-ink-600: #676057;
+        --color-ink-500: #817970;
+        --color-ink-400: #9a9188;
+        --color-paper-50: #fbfaf7;
+        --color-paper-100: #f4f0e8;
+        --color-paper-200: #e8dfd2;
+        --color-card: #ffffff;
+        --color-line: #e5ded3;
+        --color-brand: #e9502f;
+        --color-brand-700: #c83d22;
+        --color-brand-50: #fff1ec;
+        --color-herb: #28795d;
+        --color-herb-700: #1f604a;
+        --color-herb-50: #eaf7f0;
+        --color-saffron: #f2ad2e;
+        --color-mint: #46b38d;
+        --color-danger: #d92d20;
+        --color-danger-50: #fff0ed;
+
+        --radius-field: 18px;
+        --radius-panel: 30px;
+        --radius-pill: 999px;
+      }
+
+      @layer base {
+        body {
+          background: #fbfaf7;
+          color: var(--color-ink-950);
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen font-sans antialiased">
+    <div class="min-h-screen lg:grid lg:grid-cols-[268px_1fr]">
+      <aside class="hidden border-r border-line bg-card lg:flex lg:min-h-screen lg:flex-col">
+        <div class="flex h-20 items-center gap-3 border-b border-line px-6">
+          <a href="index.html" class="grid size-11 place-items-center rounded-2xl bg-ink-950 text-[17px] font-black text-white">RQ</a>
+          <div>
+            <p class="text-[15px] font-black leading-tight text-ink-950">RestoQR</p>
+            <p class="text-[12px] font-semibold leading-tight text-ink-400">Admin console</p>
+          </div>
+        </div>
+
+        <nav class="flex flex-1 flex-col gap-1 px-3 py-5 text-[14px] font-bold text-ink-600">
+          <a href="dashboard-empty.html" class="rounded-2xl bg-paper-100 px-4 py-3 text-ink-950">Дашборд</a>
+          <a href="dashboard-restaurants.html" class="rounded-2xl px-4 py-3 transition hover:bg-paper-50 hover:text-ink-950">Ресторани</a>
+          <a href="#" class="rounded-2xl px-4 py-3 text-ink-400">Меню</a>
+          <a href="#" class="rounded-2xl px-4 py-3 text-ink-400">QR-коди</a>
+          <a href="#" class="rounded-2xl px-4 py-3 text-ink-400">Замовлення</a>
+          <a href="#" class="rounded-2xl px-4 py-3 text-ink-400">Оплати</a>
+        </nav>
+
+        <div class="border-t border-line p-4">
+          <div class="rounded-[24px] bg-paper-50 p-4 ring-1 ring-line">
+            <p class="text-[12px] font-black uppercase tracking-[0.12em] text-brand-700">Next</p>
+            <p class="mt-2 text-sm font-bold leading-5 text-ink-600">Додайте ресторан, щоб відкрити меню, столи й QR-коди.</p>
+          </div>
+        </div>
+      </aside>
+
+      <section class="min-w-0">
+        <header class="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-line bg-paper-50/90 px-5 backdrop-blur-xl lg:px-8">
+          <div class="flex min-w-0 items-center gap-3">
+            <a href="index.html" class="grid size-10 place-items-center rounded-2xl bg-ink-950 text-[15px] font-black text-white lg:hidden">RQ</a>
+            <div class="min-w-0">
+              <p class="text-[13px] font-black uppercase tracking-[0.14em] text-ink-400">Admin</p>
+              <h1 class="truncate text-2xl font-black text-ink-950">Дашборд</h1>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <a href="dashboard-restaurants.html" class="hidden rounded-pill border border-line bg-white px-4 py-2 text-sm font-bold text-ink-600 transition hover:border-brand/30 hover:bg-brand-50 hover:text-brand-700 sm:inline-flex">Стан зі списком</a>
+            <div class="grid size-10 place-items-center rounded-2xl bg-white text-sm font-black text-ink-950 ring-1 ring-line">OR</div>
+          </div>
+        </header>
+
+        <main class="mx-auto max-w-6xl px-5 py-6 lg:px-8 lg:py-8">
+          <div class="mb-6 grid gap-3 sm:grid-cols-3">
+            <div class="rounded-[24px] bg-card p-4 ring-1 ring-line">
+              <p class="text-[12px] font-black uppercase tracking-[0.12em] text-ink-400">Ресторани</p>
+              <p class="mt-2 text-3xl font-black text-ink-950">0</p>
+            </div>
+            <div class="rounded-[24px] bg-card p-4 ring-1 ring-line">
+              <p class="text-[12px] font-black uppercase tracking-[0.12em] text-ink-400">Меню</p>
+              <p class="mt-2 text-3xl font-black text-ink-950">0</p>
+            </div>
+            <div class="rounded-[24px] bg-card p-4 ring-1 ring-line">
+              <p class="text-[12px] font-black uppercase tracking-[0.12em] text-ink-400">QR столи</p>
+              <p class="mt-2 text-3xl font-black text-ink-950">0</p>
+            </div>
+          </div>
+
+          <section class="grid gap-6 lg:grid-cols-[1fr_360px]">
+            <div class="rounded-[30px] bg-card p-6 shadow-[0_24px_70px_-50px_rgba(23,21,18,0.75)] ring-1 ring-line sm:p-8">
+              <p class="mb-4 inline-flex rounded-pill bg-brand-50 px-3 py-1 text-sm font-black text-brand-700 ring-1 ring-brand/10">Перший крок</p>
+              <h2 class="max-w-2xl text-[34px] font-black leading-[1.05] text-ink-950 sm:text-[44px]">Створіть ресторан, щоб запустити QR-меню</h2>
+              <p class="mt-5 max-w-2xl text-[16px] font-semibold leading-7 text-ink-600">Після створення ресторану ви зможете додати страви, столи, QR-коди та приймати замовлення від гостей.</p>
+
+              <div class="mt-8 flex flex-wrap gap-3">
+                <a href="restaurant-create.html" class="inline-flex h-14 items-center justify-center rounded-field bg-ink-950 px-6 text-[15px] font-extrabold text-white shadow-[0_18px_38px_-22px_rgba(23,21,18,0.95)] transition hover:-translate-y-0.5 hover:bg-brand-700 focus:outline-none focus:ring-4 focus:ring-brand/20">Створити ресторан</a>
+                <a href="dashboard-restaurants.html" class="inline-flex h-14 items-center justify-center rounded-field border border-line bg-white px-6 text-[15px] font-extrabold text-ink-950 transition hover:bg-paper-50">Подивитись стан зі списком</a>
+              </div>
+
+              <div class="mt-8 grid gap-3 sm:grid-cols-3">
+                <div class="rounded-[24px] bg-paper-50 p-4 ring-1 ring-line">
+                  <p class="text-sm font-black text-ink-950">1. Профіль</p>
+                  <p class="mt-2 text-sm font-semibold leading-6 text-ink-500">Назва, місто, контакти.</p>
+                </div>
+                <div class="rounded-[24px] bg-paper-50 p-4 ring-1 ring-line">
+                  <p class="text-sm font-black text-ink-950">2. Меню</p>
+                  <p class="mt-2 text-sm font-semibold leading-6 text-ink-500">Категорії, страви, ціни.</p>
+                </div>
+                <div class="rounded-[24px] bg-paper-50 p-4 ring-1 ring-line">
+                  <p class="text-sm font-black text-ink-950">3. QR</p>
+                  <p class="mt-2 text-sm font-semibold leading-6 text-ink-500">Столи та посилання.</p>
+                </div>
+              </div>
+            </div>
+
+            <aside class="rounded-[30px] bg-ink-950 p-5 text-white shadow-[0_28px_80px_-52px_rgba(23,21,18,0.9)]">
+              <div class="rounded-[24px] bg-white/10 p-4 ring-1 ring-white/10">
+                <p class="text-[12px] font-black uppercase tracking-[0.14em] text-white/55">Preview</p>
+                <h3 class="mt-2 text-2xl font-black">Bistro 21</h3>
+                <p class="mt-2 text-sm font-semibold leading-6 text-white/70">Так виглядатиме ресторан після створення.</p>
+              </div>
+
+              <div class="mt-4 space-y-3">
+                <div class="rounded-[22px] bg-white p-4 text-ink-950">
+                  <p class="text-[12px] font-bold text-ink-400">Меню</p>
+                  <p class="mt-1 text-lg font-black">0 позицій</p>
+                </div>
+                <div class="rounded-[22px] bg-white p-4 text-ink-950">
+                  <p class="text-[12px] font-bold text-ink-400">Столи</p>
+                  <p class="mt-1 text-lg font-black">0 QR-кодів</p>
+                </div>
+                <div class="rounded-[22px] bg-herb-50 p-4 text-herb">
+                  <p class="text-[12px] font-bold text-herb/70">Статус</p>
+                  <p class="mt-1 text-lg font-black">готовий до налаштування</p>
+                </div>
+              </div>
+            </aside>
+          </section>
+        </main>
+      </section>
+    </div>
+  </body>
+</html>

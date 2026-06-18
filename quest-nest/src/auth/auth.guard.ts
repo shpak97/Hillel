@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { ITokenPayload, TOKEN_TYPE } from 'src/types/token';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -20,9 +21,17 @@ export class AuthGuard implements CanActivate {
     try {
       // 💡 Here the JWT secret key that's used for verifying the payload
       // is the key that was passed in the JwtModule
-      const payload = await this.jwtService.verifyAsync<{ uid: number }>(token);
-      // 💡 We're assigning the payload to the request object here
-      // so that we can access it in our route handlers
+      // `exp` / прострочення обробляє бібліотека — прострочений токен не дійде сюди
+      const payload = await this.jwtService.verifyAsync<ITokenPayload>(token);
+
+      if (
+        payload.type !== TOKEN_TYPE.ACCESS ||
+        payload.uid == null ||
+        payload.uid === ''
+      ) {
+        throw new UnauthorizedException();
+      }
+
       request['user'] = payload;
     } catch {
       throw new UnauthorizedException();

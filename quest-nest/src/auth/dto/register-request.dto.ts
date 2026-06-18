@@ -5,7 +5,12 @@ import {
   MinLength,
   MaxLength,
   IsOptional,
+  Matches,
 } from 'class-validator';
+import {
+  PASSWORD_REGEX,
+  PASSWORD_VALIDATION_MESSAGE,
+} from 'src/common/validation/password.constant';
 export class RegisterRequestDto {
   @IsString()
   @IsEmail()
@@ -25,6 +30,6 @@ export class RegisterRequestDto {
   @IsString()
   @MinLength(8)
   @MaxLength(20)
-  // TODO: add password validation
+  @Matches(PASSWORD_REGEX, { message: PASSWORD_VALIDATION_MESSAGE })
   password!: string;
 }

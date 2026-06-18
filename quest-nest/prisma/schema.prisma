@@ -25,17 +25,22 @@ model User {
   @@map("user")
 }
 
-model Company {
+model Store {
+  id   Int    @id @default(autoincrement())
+  slug String @unique
+  name String
+
+  @@map("store")
+}
+model Menu {
   id   Int    @id @default(autoincrement())
   name String
-  meta Json?  @db.JsonB
-
-  @@map("company")
+  products Product[]
+  @@map("menu")
 }
 
-model CompanyPayment {
-  id   Int    @id @default(autoincrement())
-  iban String
-
-  @@map("company_payment")
+model Product {
+  id          String   @id @default(uuid())
+  menus      Menu[]
+  @@map("product")
 }

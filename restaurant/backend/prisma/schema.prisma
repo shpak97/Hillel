@@ -1,0 +1,133 @@
+// Prisma schema — add models here
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator json {
+  provider = "prisma-json-types-generator"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            Int          @id @default(autoincrement())
+  email         String       @unique
+  phone         String?
+  fullname      String?
+  /// [UserMeta]
+  meta          Json?        @db.JsonB
+  isActive      Boolean      @default(true)
+  deactivatedAt DateTime?
+  restaurants   Restaurant[]
+  acls          Acl[]
+  @@map("user")
+}
+
+model Acl {
+  id           Int        @id @default(autoincrement())
+  userId       Int
+  restaurantId String
+  resource     String
+  resourceId   String     @default("*")
+  permission   String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [uuid], onDelete: Cascade)
+
+  @@unique([userId, restaurantId, resource, resourceId, permission])
+  @@index([userId])
+  @@index([restaurantId])
+  @@map("acl")
+}
+
+model Restaurant {
+  uuid             String                    @id @default(uuid())
+  slug             String                    @unique
+  title            String
+  description      String
+  address          String?
+  photos           String[]                  @default([])
+  timezone         String                    @default("Europe/Kyiv")
+  deactivatedAt    DateTime?
+  deletedAt        DateTime?
+  ownerId          Int
+  owner            User                      @relation(fields: [ownerId], references: [id])
+  acls             Acl[]
+  hours            RestaurantHours[]
+  tables           Table[]
+  menus            Menu[]
+  @@map("restaurant")
+}
+
+model RestaurantHours {
+  id           Int        @id @default(autoincrement())
+  restaurantId String
+  dayOfWeek    Int?
+  date         DateTime?  @db.Date
+  opensAt      String
+  closesAt     String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [uuid], onDelete: Cascade)
+
+  @@index([restaurantId, dayOfWeek])
+  @@index([restaurantId, date])
+  @@map("restaurant_hours")
+}
+
+model Table {
+  uuid           String     @id @default(uuid())
+  restaurantId   String
+  label          String
+  zone           String
+  seats          Int
+  deactivatedAt  DateTime?
+  deletedAt      DateTime?
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [uuid], onDelete: Cascade)
+  menuLinks    TableMenu[]
+
+  @@unique([restaurantId, label])
+  @@index([restaurantId])
+  @@map("restaurant_table")
+}
+
+model Menu {
+  uuid           String              @id @default(uuid())
+  restaurantId   String
+  name           String
+  description    String?
+  photo          String?
+  deactivatedAt  DateTime?
+  deletedAt      DateTime?
+  restaurant     Restaurant          @relation(fields: [restaurantId], references: [uuid], onDelete: Cascade)
+  tableLinks     TableMenu[]
+  hours          MenuHours[]
+
+  @@index([restaurantId])
+  @@map("menu")
+}
+
+model TableMenu {
+  tableId   String
+  menuId    String
+  sortOrder Int    @default(0)
+  table     Table  @relation(fields: [tableId], references: [uuid], onDelete: Cascade)
+  menu      Menu   @relation(fields: [menuId], references: [uuid], onDelete: Cascade)
+
+  @@id([tableId, menuId])
+  @@map("table_menu")
+}
+
+model MenuHours {
+  id        Int       @id @default(autoincrement())
+  menuId    String
+  dayOfWeek Int?
+  date      DateTime? @db.Date
+  opensAt   String
+  closesAt  String
+  menu      Menu      @relation(fields: [menuId], references: [uuid], onDelete: Cascade)
+
+  @@index([menuId, dayOfWeek])
+  @@index([menuId, date])
+  @@map("menu_hours")
+}
