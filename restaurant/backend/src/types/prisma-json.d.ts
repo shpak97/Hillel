@@ -7,6 +7,7 @@ declare global {
       accessToken?: string;
       emailVerified?: boolean;
       verifyEmailLastSentAt?: number;
+      passwordResetLastSentAt?: number;
       refreshToken?: string;
     };
   }

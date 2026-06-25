@@ -12,8 +12,8 @@ npx prisma generate
 npm run start:dev
 ```
 
-- API: http://localhost:3000
-- Health: http://localhost:3000/health/db
+- API: http://localhost:3101
+- Health: http://localhost:3101/health/db
 
 Postgres **18** runs on port **5432** (`postgres:18-alpine` in `docker-compose.yml`).
 

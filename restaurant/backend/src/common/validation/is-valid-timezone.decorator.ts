@@ -4,6 +4,7 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
+import { TIMEZONE_VALIDATION_MESSAGE } from 'src/common/validation/validation.messages';
 
 @ValidatorConstraint({ name: 'isValidTimezone', async: false })
 export class IsValidTimezoneConstraint implements ValidatorConstraintInterface {
@@ -21,7 +22,7 @@ export class IsValidTimezoneConstraint implements ValidatorConstraintInterface {
   }
 
   defaultMessage(): string {
-    return 'Некоректна timezone.';
+    return TIMEZONE_VALIDATION_MESSAGE;
   }
 }
 

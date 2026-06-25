@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { AUTH_ERRORS } from './auth.errors';
 import { ITokenPayload, TOKEN_TYPE } from 'src/types/token';
 
 @Injectable()
@@ -16,7 +17,7 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractTokenFromHeader(request);
     if (!token) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(AUTH_ERRORS.MISSING_ACCESS_TOKEN);
     }
     try {
       const payload = await this.jwtService.verifyAsync<ITokenPayload>(token);
@@ -26,12 +27,15 @@ export class AuthGuard implements CanActivate {
         payload.uid == null ||
         payload.uid === ''
       ) {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException(AUTH_ERRORS.INVALID_ACCESS_TOKEN);
       }
 
       request['user'] = payload;
-    } catch {
-      throw new UnauthorizedException();
+    } catch (error: unknown) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new UnauthorizedException(AUTH_ERRORS.INVALID_ACCESS_TOKEN);
     }
     return true;
   }

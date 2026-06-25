@@ -16,4 +16,4 @@ npx prisma migrate dev
 npm run start:dev
 ```
 
-API: http://localhost:3000
+API: http://localhost:3101

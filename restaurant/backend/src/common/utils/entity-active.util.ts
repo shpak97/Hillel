@@ -14,6 +14,12 @@ export function isEntityActive(
   return deactivatedAt === null && deletedAt === null;
 }
 
+export function isUserAccountActive(user: {
+  deactivatedAt: Date | null;
+}): boolean {
+  return isEntityActive(user.deactivatedAt, null);
+}
+
 export function activeStateFromFlag(isActive: boolean): {
   deactivatedAt: Date | null;
 } {

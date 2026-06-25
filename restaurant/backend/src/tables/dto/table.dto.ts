@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsBoolean,
   IsInt,
   IsOptional,
@@ -48,6 +49,7 @@ export class UpdateTableDto {
 }
 
 export class UpdateTableMenusDto {
+  @IsArray()
   @IsString({ each: true })
   menuUuids!: string[];
 }

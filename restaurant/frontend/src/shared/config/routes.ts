@@ -3,6 +3,8 @@ export const ROUTES = {
   login: '/login',
   registration: '/registration',
   verifyEmail: '/verify-email',
+  forgotPassword: '/forgot-password',
+  resetPassword: '/reset-password',
   restaurants: '/restaurants',
   restaurantsNew: '/restaurants/new',
   restaurantEdit: (uuid: string) => `/restaurants/${uuid}/edit`,
@@ -14,12 +16,27 @@ export const ROUTES = {
   restaurantMenuNew: (uuid: string) => `/restaurants/${uuid}/menus/new`,
   restaurantMenuEdit: (restaurantUuid: string, menuUuid: string) =>
     `/restaurants/${restaurantUuid}/menus/${menuUuid}/edit`,
+  restaurantIngredients: (uuid: string) => `/restaurants/${uuid}/ingredients`,
+  restaurantIngredientNew: (uuid: string) =>
+    `/restaurants/${uuid}/ingredients/new`,
+  restaurantIngredientEdit: (restaurantUuid: string, ingredientUuid: string) =>
+    `/restaurants/${restaurantUuid}/ingredients/${ingredientUuid}/edit`,
+  restaurantProducts: (uuid: string) => `/restaurants/${uuid}/products`,
+  restaurantProductNew: (uuid: string) => `/restaurants/${uuid}/products/new`,
+  restaurantProductEdit: (restaurantUuid: string, productUuid: string) =>
+    `/restaurants/${restaurantUuid}/products/${productUuid}/edit`,
+  restaurantMenuItems: (uuid: string) => `/restaurants/${uuid}/menu-items`,
+  restaurantMenuItemNew: (uuid: string) => `/restaurants/${uuid}/menu-items/new`,
+  restaurantMenuItemEdit: (restaurantUuid: string, itemUuid: string) =>
+    `/restaurants/${restaurantUuid}/menu-items/${itemUuid}/edit`,
 } as const;
 
 export const PUBLIC_ROUTES: string[] = [
   ROUTES.login,
   ROUTES.registration,
   ROUTES.verifyEmail,
+  ROUTES.forgotPassword,
+  ROUTES.resetPassword,
 ];
 
 export type AdminNavItem = {
@@ -40,6 +57,23 @@ export function getAdminNavItems(restaurantUuid?: string): AdminNavItem[] {
     {
       label: 'Меню',
       href: restaurantUuid ? ROUTES.restaurantMenus(restaurantUuid) : undefined,
+      disabled: !restaurantUuid,
+    },
+    {
+      label: 'Інгредієнти',
+      href: restaurantUuid
+        ? ROUTES.restaurantIngredients(restaurantUuid)
+        : undefined,
+      disabled: !restaurantUuid,
+    },
+    {
+      label: 'Продукти',
+      href: restaurantUuid ? ROUTES.restaurantProducts(restaurantUuid) : undefined,
+      disabled: !restaurantUuid,
+    },
+    {
+      label: 'Позиції меню',
+      href: restaurantUuid ? ROUTES.restaurantMenuItems(restaurantUuid) : undefined,
       disabled: !restaurantUuid,
     },
     { label: 'QR-коди', disabled: true },

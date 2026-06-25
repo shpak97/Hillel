@@ -1,5 +1,5 @@
 Порт 3001 зайнятий старим процесом — знайду його й зупиню.
-lsof -i :3000 -t 2>/dev/null | head -5
+lsof -i :3101 -t 2>/dev/null | head -5
 kill -9 80255
 npm run start:dev - бек
 

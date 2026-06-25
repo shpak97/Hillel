@@ -5,6 +5,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import sgMail from '@sendgrid/mail';
+import { EMAIL_ERRORS } from '../email.errors';
 import type { EmailProvider } from '../interfaces/email-provider.interface';
 import type { SendEmailData } from '../types/send-email-data.type';
 
@@ -29,7 +30,7 @@ export class SendGridEmailProvider implements EmailProvider {
     const from = process.env.MAIL_FROM?.trim();
     if (!apiKey || !from) {
       throw new ServiceUnavailableException(
-        'Надсилання пошти не налаштоване (SEND_GRID_API_KEY / MAIL_FROM).',
+        EMAIL_ERRORS.NOT_CONFIGURED_SENDGRID,
       );
     }
 
@@ -49,7 +50,7 @@ export class SendGridEmailProvider implements EmailProvider {
         {
           statusCode: HttpStatus.BAD_GATEWAY,
           error: 'Bad Gateway',
-          message: 'Не вдалося надіслати лист через поштовий сервіс.',
+          message: EMAIL_ERRORS.SEND_FAILED.message,
           detail,
         },
         HttpStatus.BAD_GATEWAY,
@@ -68,6 +69,6 @@ export class SendGridEmailProvider implements EmailProvider {
       if (msg) return msg;
     }
     if (err instanceof Error) return err.message;
-    return 'Невідома помилка поштового провайдера.';
+    return EMAIL_ERRORS.UNKNOWN_PROVIDER_ERROR.message;
   }
 }

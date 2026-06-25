@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsBoolean,
   IsOptional,
   IsString,
@@ -37,9 +38,14 @@ export class UpdateMenuDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  removePhoto?: boolean;
 }
 
 export class UpdateMenuTablesDto {
+  @IsArray()
   @IsString({ each: true })
   tableUuids!: string[];
 }

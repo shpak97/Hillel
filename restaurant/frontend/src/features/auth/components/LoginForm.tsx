@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 import { Button, Input, FormAlert, InfoAlert } from '@/shared/ui';
@@ -116,7 +117,12 @@ export function LoginForm() {
         onChange={(event) => setPassword(event.target.value)}
         error={errors.password}
         labelExtra={
-          <span className="text-sm font-bold text-brand-700">Забули пароль?</span>
+          <Link
+            href={ROUTES.forgotPassword}
+            className="text-sm font-bold text-brand-700 transition hover:text-brand"
+          >
+            Забули пароль?
+          </Link>
         }
       />
 

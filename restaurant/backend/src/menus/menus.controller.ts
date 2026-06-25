@@ -3,20 +3,33 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
   Put,
+  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import {
-  CurrentUser,
-  getCurrentUserId,
-} from 'src/auth/decorators/current-user.decorator';
+import type { Request } from 'express';
+import { CurrentUserId } from 'src/auth/decorators/current-user.decorator';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { HoursResponseDto } from 'src/common/dto/hours-response.dto';
+import {
+  isMultipartRequest,
+  parseUpdateMenuDto,
+  resolvePhotoPatch,
+  stripRemovePhoto,
+  validateDto,
+} from 'src/common/utils/patch-body.util';
+import {
+  validateResponseDto,
+  validateResponseDtoList,
+} from 'src/common/utils/validate-response.util';
 import {
   getMenuPhotoPublicPath,
   menuPhotoMulterOptions,
@@ -26,6 +39,7 @@ import {
   UpdateMenuDto,
   UpdateMenuTablesDto,
 } from './dto/menu.dto';
+import { MenuResponseDto } from './dto/menu-response.dto';
 import { UpdateMenuHoursDto } from './hours/dto/update-menu-hours.dto';
 import { MenuHoursService } from './hours/menu-hours.service';
 import { MenusService } from './menus.service';
@@ -39,125 +53,141 @@ export class MenusController {
   ) {}
 
   @Get()
-  findAll(
-    @CurrentUser() user: { uid: string | number },
+  async findAll(
+    @CurrentUserId() userId: number,
     @Param('restaurantUuid') restaurantUuid: string,
   ) {
-    return this.menusService.findAll(getCurrentUserId(user), restaurantUuid);
+    const result = await this.menusService.findAll(userId, restaurantUuid);
+    return validateResponseDtoList(MenuResponseDto, result);
   }
 
   @Get(':menuUuid/hours')
-  getHours(
-    @CurrentUser() user: { uid: string | number },
+  async getHours(
+    @CurrentUserId() userId: number,
     @Param('restaurantUuid') restaurantUuid: string,
     @Param('menuUuid') menuUuid: string,
   ) {
-    return this.menuHoursService.getHours(
-      getCurrentUserId(user),
+    const result = await this.menuHoursService.getHours(
+      userId,
       restaurantUuid,
       menuUuid,
     );
+    return validateResponseDto(HoursResponseDto, result);
   }
 
   @Put(':menuUuid/hours')
-  updateHours(
-    @CurrentUser() user: { uid: string | number },
+  async updateHours(
+    @CurrentUserId() userId: number,
     @Param('restaurantUuid') restaurantUuid: string,
     @Param('menuUuid') menuUuid: string,
     @Body() dto: UpdateMenuHoursDto,
   ) {
-    return this.menuHoursService.updateHours(
-      getCurrentUserId(user),
+    const result = await this.menuHoursService.updateHours(
+      userId,
       restaurantUuid,
       menuUuid,
       dto,
     );
+    return validateResponseDto(HoursResponseDto, result);
   }
 
   @Get(':menuUuid')
-  findOne(
-    @CurrentUser() user: { uid: string | number },
+  async findOne(
+    @CurrentUserId() userId: number,
     @Param('restaurantUuid') restaurantUuid: string,
     @Param('menuUuid') menuUuid: string,
   ) {
-    return this.menusService.findOne(
-      getCurrentUserId(user),
+    const result = await this.menusService.findOne(
+      userId,
       restaurantUuid,
       menuUuid,
     );
+    return validateResponseDto(MenuResponseDto, result);
   }
 
   @Post()
   @UseInterceptors(FileInterceptor('photo', menuPhotoMulterOptions))
-  create(
-    @CurrentUser() user: { uid: string | number },
+  async create(
+    @CurrentUserId() userId: number,
     @Param('restaurantUuid') restaurantUuid: string,
     @Body() dto: CreateMenuDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
     const photo = file ? getMenuPhotoPublicPath(file.filename) : undefined;
 
-    return this.menusService.create(
-      getCurrentUserId(user),
+    const result = await this.menusService.create(
+      userId,
       restaurantUuid,
       dto,
       photo,
     );
+    return validateResponseDto(MenuResponseDto, result);
   }
 
   @Patch(':menuUuid')
   @UseInterceptors(FileInterceptor('photo', menuPhotoMulterOptions))
-  update(
-    @CurrentUser() user: { uid: string | number },
+  async update(
+    @CurrentUserId() userId: number,
     @Param('restaurantUuid') restaurantUuid: string,
     @Param('menuUuid') menuUuid: string,
-    @Body() body: Record<string, string>,
+    @Req() req: Request,
+    @Body() body: Record<string, unknown>,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    const newPhoto = file ? getMenuPhotoPublicPath(file.filename) : undefined;
-    const dto: UpdateMenuDto = {
-      ...(body.name !== undefined ? { name: body.name } : {}),
-      ...(body.description !== undefined ? { description: body.description } : {}),
-      ...(body.isActive !== undefined
-        ? { isActive: body.isActive === 'true' }
-        : {}),
-      ...(body.removePhoto === 'true' ? { photo: null } : {}),
-    };
+    const isMultipart = isMultipartRequest(req);
+    const dto = stripRemovePhoto(
+      validateDto(
+        UpdateMenuDto,
+        isMultipart
+          ? parseUpdateMenuDto(body as Record<string, string>)
+          : body,
+      ),
+    );
+    const removePhoto = isMultipart
+      ? (body.removePhoto as boolean | string | undefined)
+      : (body as UpdateMenuDto).removePhoto;
+    const photoPatch = resolvePhotoPatch({
+      removePhoto,
+      file,
+      getPath: getMenuPhotoPublicPath,
+    });
 
-    return this.menusService.update(
-      getCurrentUserId(user),
+    const result = await this.menusService.update(
+      userId,
       restaurantUuid,
       menuUuid,
-      dto,
-      newPhoto,
+      {
+        ...dto,
+        ...(photoPatch === null ? { photo: null } : {}),
+      },
+      photoPatch === null ? undefined : photoPatch,
     );
+    return validateResponseDto(MenuResponseDto, result);
   }
 
   @Put(':menuUuid/tables')
-  updateTables(
-    @CurrentUser() user: { uid: string | number },
+  async updateTables(
+    @CurrentUserId() userId: number,
     @Param('restaurantUuid') restaurantUuid: string,
     @Param('menuUuid') menuUuid: string,
     @Body() dto: UpdateMenuTablesDto,
   ) {
-    return this.menusService.updateTables(
-      getCurrentUserId(user),
+    const result = await this.menusService.updateTables(
+      userId,
       restaurantUuid,
       menuUuid,
       dto.tableUuids,
     );
+    return validateResponseDto(MenuResponseDto, result);
   }
 
   @Delete(':menuUuid')
-  remove(
-    @CurrentUser() user: { uid: string | number },
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(
+    @CurrentUserId() userId: number,
     @Param('restaurantUuid') restaurantUuid: string,
     @Param('menuUuid') menuUuid: string,
-  ) {
-    return this.menusService.remove(
-      getCurrentUserId(user),
-      restaurantUuid,
-      menuUuid,
-    );
+  ): Promise<void> {
+    await this.menusService.remove(userId, restaurantUuid, menuUuid);
   }
 }

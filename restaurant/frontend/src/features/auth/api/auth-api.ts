@@ -31,3 +31,17 @@ export function sendVerificationEmail(email: string) {
     body: { email },
   });
 }
+
+export function sendPasswordResetEmail(email: string) {
+  return apiClient<{ message: string }>('/auth/password-reset/send', {
+    method: 'POST',
+    body: { email },
+  });
+}
+
+export function resetPassword(token: string, password: string) {
+  return apiClient<{ ok: true }>('/auth/password-reset/confirm', {
+    method: 'POST',
+    body: { token, password },
+  });
+}

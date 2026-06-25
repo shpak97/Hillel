@@ -16,11 +16,24 @@ import bcrypt from 'bcrypt';
 import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import { ITokenPayload, TOKEN_TYPE } from 'src/types/token';
 import { EmailService } from 'src/email/email.service';
+import { isUserAccountActive } from 'src/common/utils/entity-active.util';
 import { isPrismaErrorCode } from 'src/common/utils/prisma-error.util';
 import { ILoginResponse, IAccessTokenResponse } from 'src/types/interfaces';
 import { RefreshAccessTokenRequestDto } from './dto/refresh-access-token-request.dto';
+import { AUTH_ERRORS } from './auth.errors';
+import { JWT_TOKEN_EXPIRATION } from './jwt.config';
+import { AUTH_MESSAGES, buildEmailVerificationHtml, buildPasswordResetHtml } from './auth.messages';
 
 const RESEND_COOLDOWN_MS = 60_000;
+
+type ActionTokenType =
+  | typeof TOKEN_TYPE.EMAIL
+  | typeof TOKEN_TYPE.PASSWORD_RESET;
+
+type ActionTokenPayload = {
+  uid: number;
+  type: ActionTokenType;
+};
 
 export type SendVerificationOptions = {
   ignoreCooldown?: boolean;
@@ -39,23 +52,13 @@ export class AuthService {
       const user = await this.usersData.findUnique({
         email: loginRequestDto.email,
       });
-      if (!user) {
-        throw new UnauthorizedException('Невірний email або пароль');
-      }
-      if (!user.isActive) {
-        throw new UnauthorizedException({
-          code: 'ACCOUNT_DEACTIVATED',
-          message: 'Акаунт деактивовано',
-        });
+      if (!user || !isUserAccountActive(user)) {
+        throw new UnauthorizedException(AUTH_ERRORS.ACCESS_DENIED);
       }
 
       const meta = (user.meta ?? {}) as PrismaJson.UserMeta;
       if (!meta.emailVerified) {
-        throw new UnauthorizedException({
-          code: 'EMAIL_NOT_VERIFIED',
-          message:
-            'Електронну пошту не підтверджено. Перевірте пошту або надішліть лист повторно.',
-        });
+        throw new UnauthorizedException(AUTH_ERRORS.EMAIL_NOT_VERIFIED);
       }
 
       const isValidPassword = await this.comparePassword(
@@ -63,19 +66,22 @@ export class AuthService {
         meta.password,
       );
       if (!isValidPassword) {
-        throw new UnauthorizedException('Невірний email або пароль');
+        throw new UnauthorizedException(AUTH_ERRORS.ACCESS_DENIED);
       }
 
-      const accessToken = await this.generateToken({
-        uid: user.id,
-        type: TOKEN_TYPE.ACCESS,
-      });
+      const accessToken = await this.generateToken(
+        {
+          uid: user.id,
+          type: TOKEN_TYPE.ACCESS,
+        },
+        { expiresIn: JWT_TOKEN_EXPIRATION.ACCESS },
+      );
       const refreshToken = await this.generateToken(
         {
           uid: user.id,
           type: TOKEN_TYPE.REFRESH,
         },
-        { expiresIn: '7d' },
+        { expiresIn: JWT_TOKEN_EXPIRATION.REFRESH },
       );
 
       await this.usersData.update(
@@ -93,7 +99,7 @@ export class AuthService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('Не вдалося увійти');
+      throw new InternalServerErrorException(AUTH_ERRORS.LOGIN_FAILED);
     }
   }
 
@@ -105,30 +111,28 @@ export class AuthService {
       });
     } catch (error: unknown) {
       if (isPrismaErrorCode(error, 'P2002')) {
-        throw new ConflictException(
-          'Користувач із такою поштою вже зареєстрований.',
-        );
+        throw new ConflictException(AUTH_ERRORS.USER_ALREADY_EXISTS);
       }
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('Не вдалося зареєструватися');
+      throw new InternalServerErrorException(AUTH_ERRORS.REGISTRATION_FAILED);
     }
   }
 
   async sendVerificationEmail(
     email: string,
     options?: SendVerificationOptions,
-  ): Promise<{ ok: true }> {
+  ): Promise<void> {
     try {
       const user = await this.usersData.findUnique({ email });
-      if (!user || !user.isActive) {
-        return { ok: true };
+      if (!user || !isUserAccountActive(user)) {
+        return;
       }
 
       const meta = (user.meta ?? {}) as PrismaJson.UserMeta;
       if (meta.emailVerified) {
-        return { ok: true };
+        return;
       }
 
       const lastSent = meta.verifyEmailLastSentAt;
@@ -138,7 +142,7 @@ export class AuthService {
         Date.now() - lastSent < RESEND_COOLDOWN_MS
       ) {
         throw new HttpException(
-          'Зачекайте хвилину перед повторним надсиланням листа.',
+          AUTH_ERRORS.RESEND_COOLDOWN,
           HttpStatus.TOO_MANY_REQUESTS,
         );
       }
@@ -148,7 +152,7 @@ export class AuthService {
           uid: user.id,
           type: TOKEN_TYPE.EMAIL,
         },
-        { expiresIn: '24h' },
+        { expiresIn: JWT_TOKEN_EXPIRATION.EMAIL },
       );
 
       const baseUrl = process.env.VERIFY_EMAIL_URL ?? '';
@@ -156,8 +160,8 @@ export class AuthService {
 
       await this.emailService.sendEmail({
         to: email,
-        subject: 'Підтвердження електронної пошти',
-        html: `<p>Підтвердіть пошту за посиланням:</p><p><a href="${verifyUrl}">${verifyUrl}</a></p>`,
+        subject: AUTH_MESSAGES.EMAIL_VERIFICATION_SUBJECT,
+        html: buildEmailVerificationHtml(verifyUrl),
       });
 
       await this.usersData.update(
@@ -169,60 +173,118 @@ export class AuthService {
           } as PrismaJson.UserMeta,
         },
       );
-
-      return { ok: true };
     } catch (error: unknown) {
       if (error instanceof HttpException) {
         throw error;
       }
       throw new InternalServerErrorException(
-        'Не вдалося надіслати лист підтвердження',
+        AUTH_ERRORS.VERIFICATION_EMAIL_FAILED,
       );
     }
   }
 
-  async verifyEmail(token: string): Promise<{ ok: true }> {
+  async verifyEmail(token: string): Promise<void> {
+    const userId = await this.verifyActionToken(token, TOKEN_TYPE.EMAIL);
+    const user = await this.usersData.findUnique({ id: userId });
+
+    if (!user || !isUserAccountActive(user)) {
+      throw new BadRequestException(AUTH_ERRORS.INVALID_TOKEN);
+    }
+
+    const meta = (user.meta ?? {}) as PrismaJson.UserMeta;
+    await this.usersData.update(
+      { id: user.id },
+      {
+        meta: {
+          ...meta,
+          emailVerified: true,
+        } as PrismaJson.UserMeta,
+      },
+    );
+  }
+
+  async sendPasswordResetEmail(email: string): Promise<void> {
     try {
-      let payload: { uid?: unknown; type?: unknown };
-      try {
-        payload = await this.jwtService.verifyAsync<{
-          uid: number;
-          type: string;
-        }>(token);
-      } catch {
-        throw new BadRequestException('Невірний або прострочений токен.');
-      }
-
-      if (
-        payload.type !== TOKEN_TYPE.EMAIL ||
-        typeof payload.uid !== 'number'
-      ) {
-        throw new BadRequestException('Невірний або прострочений токен.');
-      }
-
-      const user = await this.usersData.findUnique({ id: payload.uid });
-      if (!user || !user.isActive) {
-        throw new BadRequestException('Невірний або прострочений токен.');
+      const user = await this.usersData.findUnique({ email });
+      if (!user || !isUserAccountActive(user)) {
+        return;
       }
 
       const meta = (user.meta ?? {}) as PrismaJson.UserMeta;
+      if (!meta.emailVerified) {
+        return;
+      }
+
+      const lastSent = meta.passwordResetLastSentAt;
+      if (
+        typeof lastSent === 'number' &&
+        Date.now() - lastSent < RESEND_COOLDOWN_MS
+      ) {
+        throw new HttpException(
+          AUTH_ERRORS.RESEND_COOLDOWN,
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+
+      const token = await this.jwtService.signAsync(
+        {
+          uid: user.id,
+          type: TOKEN_TYPE.PASSWORD_RESET,
+        },
+        { expiresIn: JWT_TOKEN_EXPIRATION.PASSWORD_RESET },
+      );
+
+      const baseUrl = process.env.PASSWORD_RESET_URL ?? '';
+      const resetUrl = `${baseUrl.replace(/\/$/, '')}?token=${encodeURIComponent(token)}`;
+
+      await this.emailService.sendEmail({
+        to: email,
+        subject: AUTH_MESSAGES.PASSWORD_RESET_SUBJECT,
+        html: buildPasswordResetHtml(resetUrl),
+      });
+
       await this.usersData.update(
         { id: user.id },
         {
           meta: {
             ...meta,
-            emailVerified: true,
+            passwordResetLastSentAt: Date.now(),
           } as PrismaJson.UserMeta,
         },
       );
-
-      return { ok: true };
     } catch (error: unknown) {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('Не вдалося підтвердити пошту');
+      throw new InternalServerErrorException(
+        AUTH_ERRORS.PASSWORD_RESET_EMAIL_FAILED,
+      );
     }
+  }
+
+  async resetPassword(token: string, password: string): Promise<void> {
+    const userId = await this.verifyActionToken(
+      token,
+      TOKEN_TYPE.PASSWORD_RESET,
+    );
+    const user = await this.usersData.findUnique({ id: userId });
+
+    if (!user || !isUserAccountActive(user)) {
+      throw new BadRequestException(AUTH_ERRORS.INVALID_TOKEN);
+    }
+
+    const meta = (user.meta ?? {}) as PrismaJson.UserMeta;
+    await this.usersData.update(
+      { id: user.id },
+      {
+        meta: {
+          ...meta,
+          password: await this.hashPassword(password),
+          accessToken: '',
+          refreshToken: '',
+        } as PrismaJson.UserMeta,
+      },
+    );
   }
 
   async refreshAccessToken(
@@ -232,20 +294,23 @@ export class AuthService {
       const { refreshToken } = refreshAccessTokenRequestDto;
       const { uid, type } = await this.verifyTokenPayload(refreshToken);
       if (type !== TOKEN_TYPE.REFRESH) {
-        throw new BadRequestException('Невірний refresh-токен');
+        throw new BadRequestException(AUTH_ERRORS.INVALID_REFRESH_TOKEN);
       }
 
       const user = await this.usersData.findUnique({
         id: Number(uid),
       });
-      if (!user || !user.isActive) {
-        throw new NotFoundException('Користувача не знайдено');
+      if (!user || !isUserAccountActive(user)) {
+        throw new NotFoundException(AUTH_ERRORS.USER_NOT_FOUND);
       }
 
-      const accessToken = await this.generateToken({
-        uid: user.id,
-        type: TOKEN_TYPE.ACCESS,
-      });
+      const accessToken = await this.generateToken(
+        {
+          uid: user.id,
+          type: TOKEN_TYPE.ACCESS,
+        },
+        { expiresIn: JWT_TOKEN_EXPIRATION.ACCESS },
+      );
 
       const meta = (user.meta ?? {}) as PrismaJson.UserMeta;
       await this.usersData.update(
@@ -262,7 +327,7 @@ export class AuthService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('Не вдалося оновити access-токен');
+      throw new InternalServerErrorException(AUTH_ERRORS.REFRESH_TOKEN_FAILED);
     }
   }
 
@@ -296,6 +361,38 @@ export class AuthService {
     return await this.jwtService.signAsync(tokenData, options);
   }
 
+  private async verifyActionToken(
+    token: string,
+    expectedType: ActionTokenType,
+  ): Promise<number> {
+    try {
+      const payload =
+        await this.jwtService.verifyAsync<ActionTokenPayload>(token);
+
+      if (payload.type !== expectedType || typeof payload.uid !== 'number') {
+        throw new BadRequestException(AUTH_ERRORS.INVALID_TOKEN);
+      }
+
+      return payload.uid;
+    } catch (error: unknown) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new BadRequestException(this.getTokenVerificationError(error));
+    }
+  }
+
+  private getTokenVerificationError(
+    error: unknown,
+  ): (typeof AUTH_ERRORS)[keyof typeof AUTH_ERRORS] {
+    if (error instanceof Error && error.name === 'TokenExpiredError') {
+      return AUTH_ERRORS.TOKEN_EXPIRED;
+    }
+
+    return AUTH_ERRORS.INVALID_TOKEN;
+  }
+
   private async verifyToken(token: string): Promise<ITokenPayload> {
     return await this.jwtService.verifyAsync<ITokenPayload>(token);
   }
@@ -303,7 +400,7 @@ export class AuthService {
   private async verifyTokenPayload(token: string): Promise<ITokenPayload> {
     const { uid, type } = await this.verifyToken(token);
     if (!uid || !type) {
-      throw new BadRequestException('Невірний токен');
+      throw new BadRequestException(AUTH_ERRORS.INVALID_TOKEN);
     }
     return { uid, type };
   }

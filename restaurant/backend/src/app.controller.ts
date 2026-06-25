@@ -1,5 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
+import { validateResponseDto } from 'src/common/utils/validate-response.util';
 import { AppService } from './app.service';
+import { HealthResponseDto } from './app/dto/health-response.dto';
 
 @Controller()
 export class AppController {
@@ -11,7 +13,8 @@ export class AppController {
   }
 
   @Get('health/db')
-  getDbHealth() {
-    return this.appService.getDbHealth();
+  async getDbHealth() {
+    const result = await this.appService.getDbHealth();
+    return validateResponseDto(HealthResponseDto, result);
   }
 }

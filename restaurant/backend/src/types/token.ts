@@ -2,6 +2,7 @@ export const TOKEN_TYPE = {
   ACCESS: 'access',
   REFRESH: 'refresh',
   EMAIL: 'email',
+  PASSWORD_RESET: 'password_reset',
 } as const;
 
 export interface ITokenPayload {

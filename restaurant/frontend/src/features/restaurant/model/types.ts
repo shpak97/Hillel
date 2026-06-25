@@ -8,6 +8,7 @@ export type Restaurant = {
   address: string | null;
   photos: string[];
   timezone: string;
+  currency: string;
   isActive: boolean;
   deactivatedAt: string | null;
   ownerId: number;

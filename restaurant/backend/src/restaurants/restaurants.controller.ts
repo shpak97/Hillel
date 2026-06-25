@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -12,16 +14,19 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import {
-  CurrentUser,
-  getCurrentUserId,
-} from 'src/auth/decorators/current-user.decorator';
+import { CurrentUserId } from 'src/auth/decorators/current-user.decorator';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { HoursResponseDto } from 'src/common/dto/hours-response.dto';
+import {
+  validateResponseDto,
+  validateResponseDtoList,
+} from 'src/common/utils/validate-response.util';
 import {
   getRestaurantPhotoPublicPath,
   restaurantPhotosMulterOptions,
 } from 'src/uploads/restaurant-photos.multer';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
+import { RestaurantResponseDto } from './dto/restaurant-response.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { UpdateRestaurantHoursDto } from './hours/dto/update-restaurant-hours.dto';
 import { RestaurantHoursService } from './hours/restaurant-hours.service';
@@ -59,45 +64,49 @@ export class RestaurantsController {
   ) {}
 
   @Get()
-  findAll(@CurrentUser() user: { uid: string | number }) {
-    return this.restaurantsService.findAll(getCurrentUserId(user));
+  async findAll(@CurrentUserId() userId: number) {
+    const result = await this.restaurantsService.findAll(userId);
+    return validateResponseDtoList(RestaurantResponseDto, result);
   }
 
   @Get(':uuid/hours')
-  getHours(
-    @CurrentUser() user: { uid: string | number },
+  async getHours(
+    @CurrentUserId() userId: number,
     @Param('uuid') uuid: string,
   ) {
-    return this.restaurantHoursService.getHours(getCurrentUserId(user), uuid);
+    const result = await this.restaurantHoursService.getHours(userId, uuid);
+    return validateResponseDto(HoursResponseDto, result);
   }
 
   @Put(':uuid/hours')
-  updateHours(
-    @CurrentUser() user: { uid: string | number },
+  async updateHours(
+    @CurrentUserId() userId: number,
     @Param('uuid') uuid: string,
     @Body() dto: UpdateRestaurantHoursDto,
   ) {
-    return this.restaurantHoursService.updateHours(
-      getCurrentUserId(user),
+    const result = await this.restaurantHoursService.updateHours(
+      userId,
       uuid,
       dto,
     );
+    return validateResponseDto(HoursResponseDto, result);
   }
 
   @Get(':uuid')
-  findOne(
-    @CurrentUser() user: { uid: string | number },
+  async findOne(
+    @CurrentUserId() userId: number,
     @Param('uuid') uuid: string,
   ) {
-    return this.restaurantsService.findOne(getCurrentUserId(user), uuid);
+    const result = await this.restaurantsService.findOne(userId, uuid);
+    return validateResponseDto(RestaurantResponseDto, result);
   }
 
   @Post()
   @UseInterceptors(
     FilesInterceptor('photos', 20, restaurantPhotosMulterOptions),
   )
-  create(
-    @CurrentUser() user: { uid: string | number },
+  async create(
+    @CurrentUserId() userId: number,
     @Body() dto: CreateRestaurantDto,
     @UploadedFiles() files: Express.Multer.File[] = [],
   ) {
@@ -105,19 +114,20 @@ export class RestaurantsController {
       getRestaurantPhotoPublicPath(file.filename),
     );
 
-    return this.restaurantsService.create(
-      getCurrentUserId(user),
+    const result = await this.restaurantsService.create(
+      userId,
       dto,
       photos,
     );
+    return validateResponseDto(RestaurantResponseDto, result);
   }
 
   @Patch(':uuid')
   @UseInterceptors(
     FilesInterceptor('photos', 20, restaurantPhotosMulterOptions),
   )
-  update(
-    @CurrentUser() user: { uid: string | number },
+  async update(
+    @CurrentUserId() userId: number,
     @Param('uuid') uuid: string,
     @Body() body: UpdateRestaurantDto,
     @UploadedFiles() files: Express.Multer.File[] = [],
@@ -132,38 +142,43 @@ export class RestaurantsController {
       ...(body.description !== undefined ? { description: body.description } : {}),
       ...(body.address !== undefined ? { address: body.address } : {}),
       ...(body.timezone !== undefined ? { timezone: body.timezone } : {}),
+      ...(body.currency !== undefined ? { currency: body.currency } : {}),
       ...(existingPhotos !== undefined ? { photos: existingPhotos } : {}),
     };
 
-    return this.restaurantsService.update(
-      getCurrentUserId(user),
+    const result = await this.restaurantsService.update(
+      userId,
       uuid,
       dto,
       newPhotos,
     );
+    return validateResponseDto(RestaurantResponseDto, result);
   }
 
   @Patch(':uuid/deactivate')
-  deactivate(
-    @CurrentUser() user: { uid: string | number },
+  async deactivate(
+    @CurrentUserId() userId: number,
     @Param('uuid') uuid: string,
   ) {
-    return this.restaurantsService.deactivate(getCurrentUserId(user), uuid);
+    const result = await this.restaurantsService.deactivate(userId, uuid);
+    return validateResponseDto(RestaurantResponseDto, result);
   }
 
   @Patch(':uuid/activate')
-  activate(
-    @CurrentUser() user: { uid: string | number },
+  async activate(
+    @CurrentUserId() userId: number,
     @Param('uuid') uuid: string,
   ) {
-    return this.restaurantsService.activate(getCurrentUserId(user), uuid);
+    const result = await this.restaurantsService.activate(userId, uuid);
+    return validateResponseDto(RestaurantResponseDto, result);
   }
 
   @Delete(':uuid')
-  remove(
-    @CurrentUser() user: { uid: string | number },
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(
+    @CurrentUserId() userId: number,
     @Param('uuid') uuid: string,
-  ) {
-    return this.restaurantsService.remove(getCurrentUserId(user), uuid);
+  ): Promise<void> {
+    await this.restaurantsService.remove(userId, uuid);
   }
 }

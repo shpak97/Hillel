@@ -1,11 +1,10 @@
 'use client';
 
-import { FormEvent, useMemo, useRef, useState } from 'react';
+import { FormEvent, useMemo, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, FormAlert, Input, Textarea } from '@/shared/ui';
+import { Button, FormAlert, Input, SinglePhotoUpload, Textarea } from '@/shared/ui';
 import { ROUTES } from '@/shared/config/routes';
 import { parseApiError } from '@/shared/api/error-message';
-import { getPhotoFileName, getRestaurantPhotoUrl } from '@/features/restaurant/lib/photo-url';
 import {
   DAY_LABELS,
   buildEmptyWeekly,
@@ -23,6 +22,7 @@ type MenuFormProps = {
   menu?: Menu;
   tables: Table[];
   initialHours?: RestaurantHours | null;
+  afterContent?: ReactNode;
 };
 
 type WeeklyDayView = WeeklyDayHours & {
@@ -38,9 +38,9 @@ export function MenuForm({
   menu,
   tables,
   initialHours = null,
+  afterContent,
 }: MenuFormProps) {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const isEdit = Boolean(menu);
   const [name, setName] = useState(menu?.name ?? '');
   const [description, setDescription] = useState(menu?.description ?? '');
@@ -65,20 +65,6 @@ export function MenuForm({
       })),
     [weekly],
   );
-
-  function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0] ?? null;
-    setPhotoFile(file);
-    event.target.value = '';
-  }
-
-  function removeExistingPhoto() {
-    setExistingPhoto(null);
-  }
-
-  function removeNewPhoto() {
-    setPhotoFile(null);
-  }
 
   function toggleTable(tableUuid: string) {
     setTableUuids((current) =>
@@ -300,80 +286,14 @@ export function MenuForm({
             rows={4}
           />
 
-          <fieldset className="rounded-[26px] border border-line bg-paper-50 p-4">
-            <legend className="px-2 text-sm font-black text-ink-800">
-              Фото меню
-            </legend>
-            <div className="mt-2 grid gap-3">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                className="sr-only"
-                onChange={handlePhotoChange}
-              />
-
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex min-h-36 flex-col items-center justify-center rounded-[24px] border border-dashed border-paper-200 bg-white px-4 py-6 text-center transition hover:border-brand/40 hover:bg-brand-50/40"
-              >
-                <span className="grid size-12 place-items-center rounded-2xl bg-brand-50 text-xl font-black text-brand-700">
-                  +
-                </span>
-                <span className="mt-3 text-sm font-black text-ink-950">
-                  {existingPhoto || photoFile ? 'Замінити фото' : 'Завантажити фото'}
-                </span>
-                <span className="mt-1 text-sm font-semibold text-ink-500">
-                  JPEG, PNG, WebP або GIF, один файл
-                </span>
-              </button>
-
-              {existingPhoto || photoFile ? (
-                <div className="space-y-2">
-                  {existingPhoto && !photoFile ? (
-                    <div className="rounded-2xl border border-line bg-white px-4 py-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex min-w-0 items-center gap-3">
-                          <img
-                            src={getRestaurantPhotoUrl(existingPhoto)}
-                            alt={name || 'Фото меню'}
-                            className="size-12 rounded-xl object-cover ring-1 ring-line"
-                          />
-                          <span className="min-w-0 truncate text-sm font-black text-ink-950">
-                            {getPhotoFileName(existingPhoto)}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={removeExistingPhoto}
-                          className="shrink-0 text-sm font-black text-brand-700 underline-offset-4 hover:underline"
-                        >
-                          Видалити фото
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
-                  {photoFile ? (
-                    <div className="rounded-2xl border border-line bg-white px-4 py-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="min-w-0 truncate text-sm font-black text-ink-950">
-                          {photoFile.name}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={removeNewPhoto}
-                          className="shrink-0 text-sm font-black text-brand-700 underline-offset-4 hover:underline"
-                        >
-                          Видалити фото
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          </fieldset>
+          <SinglePhotoUpload
+            legend="Фото меню"
+            existingPhoto={existingPhoto}
+            photoFile={photoFile}
+            onExistingPhotoChange={setExistingPhoto}
+            onPhotoFileChange={setPhotoFile}
+            previewAlt={name || 'Фото меню'}
+          />
 
           <label className="inline-flex items-center gap-2 text-sm font-bold text-ink-600">
             <input
@@ -596,6 +516,8 @@ export function MenuForm({
       {formError ? (
         <FormAlert className="text-[13px]">{formError}</FormAlert>
       ) : null}
+
+      {afterContent}
 
       <Button type="submit" disabled={isSubmitting} fullWidth>
         {isSubmitting

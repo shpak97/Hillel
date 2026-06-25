@@ -1,6 +1,7 @@
 import {
   ArrayMaxSize,
   IsArray,
+  IsIn,
   IsOptional,
   IsString,
   Matches,
@@ -8,6 +9,8 @@ import {
   MinLength,
 } from 'class-validator';
 import { IsValidTimezone } from 'src/common/validation/is-valid-timezone.decorator';
+import { SUPPORTED_CURRENCIES } from 'src/common/validation/currency.constant';
+import { SLUG_VALIDATION_MESSAGE } from 'src/common/validation/validation.messages';
 
 export class UpdateRestaurantDto {
   @IsOptional()
@@ -21,7 +24,7 @@ export class UpdateRestaurantDto {
   @MinLength(2)
   @MaxLength(100)
   @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
-    message: 'Slug може містити лише малі латинські літери, цифри та дефіс.',
+    message: SLUG_VALIDATION_MESSAGE,
   })
   slug?: string;
 
@@ -50,4 +53,9 @@ export class UpdateRestaurantDto {
   @IsString()
   @IsValidTimezone()
   timezone?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(SUPPORTED_CURRENCIES)
+  currency?: (typeof SUPPORTED_CURRENCIES)[number];
 }

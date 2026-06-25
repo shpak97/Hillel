@@ -3,22 +3,26 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
   Put,
   UseGuards,
 } from '@nestjs/common';
-import {
-  CurrentUser,
-  getCurrentUserId,
-} from 'src/auth/decorators/current-user.decorator';
+import { CurrentUserId } from 'src/auth/decorators/current-user.decorator';
 import { AuthGuard } from 'src/auth/auth.guard';
+import {
+  validateResponseDto,
+  validateResponseDtoList,
+} from 'src/common/utils/validate-response.util';
 import {
   CreateTableDto,
   UpdateTableDto,
   UpdateTableMenusDto,
 } from './dto/table.dto';
+import { TableResponseDto } from './dto/table-response.dto';
 import { TablesService } from './tables.service';
 
 @Controller('restaurants/:restaurantUuid/tables')
@@ -27,79 +31,81 @@ export class TablesController {
   constructor(private readonly tablesService: TablesService) {}
 
   @Get()
-  findAll(
-    @CurrentUser() user: { uid: string | number },
+  async findAll(
+    @CurrentUserId() userId: number,
     @Param('restaurantUuid') restaurantUuid: string,
   ) {
-    return this.tablesService.findAll(getCurrentUserId(user), restaurantUuid);
+    const result = await this.tablesService.findAll(userId, restaurantUuid);
+    return validateResponseDtoList(TableResponseDto, result);
   }
 
   @Get(':tableUuid')
-  findOne(
-    @CurrentUser() user: { uid: string | number },
+  async findOne(
+    @CurrentUserId() userId: number,
     @Param('restaurantUuid') restaurantUuid: string,
     @Param('tableUuid') tableUuid: string,
   ) {
-    return this.tablesService.findOne(
-      getCurrentUserId(user),
+    const result = await this.tablesService.findOne(
+      userId,
       restaurantUuid,
       tableUuid,
     );
+    return validateResponseDto(TableResponseDto, result);
   }
 
   @Post()
-  create(
-    @CurrentUser() user: { uid: string | number },
+  async create(
+    @CurrentUserId() userId: number,
     @Param('restaurantUuid') restaurantUuid: string,
     @Body() dto: CreateTableDto,
   ) {
-    return this.tablesService.create(
-      getCurrentUserId(user),
+    const result = await this.tablesService.create(
+      userId,
       restaurantUuid,
       dto,
     );
+    return validateResponseDto(TableResponseDto, result);
   }
 
   @Patch(':tableUuid')
-  update(
-    @CurrentUser() user: { uid: string | number },
+  async update(
+    @CurrentUserId() userId: number,
     @Param('restaurantUuid') restaurantUuid: string,
     @Param('tableUuid') tableUuid: string,
     @Body() dto: UpdateTableDto,
   ) {
-    return this.tablesService.update(
-      getCurrentUserId(user),
+    const result = await this.tablesService.update(
+      userId,
       restaurantUuid,
       tableUuid,
       dto,
     );
+    return validateResponseDto(TableResponseDto, result);
   }
 
   @Put(':tableUuid/menus')
-  updateMenus(
-    @CurrentUser() user: { uid: string | number },
+  async updateMenus(
+    @CurrentUserId() userId: number,
     @Param('restaurantUuid') restaurantUuid: string,
     @Param('tableUuid') tableUuid: string,
     @Body() dto: UpdateTableMenusDto,
   ) {
-    return this.tablesService.updateMenus(
-      getCurrentUserId(user),
+    const result = await this.tablesService.updateMenus(
+      userId,
       restaurantUuid,
       tableUuid,
       dto.menuUuids,
     );
+    return validateResponseDto(TableResponseDto, result);
   }
 
   @Delete(':tableUuid')
-  remove(
-    @CurrentUser() user: { uid: string | number },
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(
+    @CurrentUserId() userId: number,
     @Param('restaurantUuid') restaurantUuid: string,
     @Param('tableUuid') tableUuid: string,
-  ) {
-    return this.tablesService.remove(
-      getCurrentUserId(user),
-      restaurantUuid,
-      tableUuid,
-    );
+  ): Promise<void> {
+    await this.tablesService.remove(userId, restaurantUuid, tableUuid);
   }
 }

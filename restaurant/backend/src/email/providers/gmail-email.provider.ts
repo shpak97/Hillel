@@ -1,4 +1,5 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { EMAIL_ERRORS } from '../email.errors';
 import type { EmailProvider } from '../interfaces/email-provider.interface';
 import type { SendEmailData } from '../types/send-email-data.type';
 
@@ -8,7 +9,7 @@ export class GmailEmailProvider implements EmailProvider {
     const from = process.env.MAIL_FROM?.trim();
     if (!from) {
       throw new ServiceUnavailableException(
-        'Надсилання пошти не налаштоване (MAIL_FROM).',
+        EMAIL_ERRORS.NOT_CONFIGURED_MAIL_FROM,
       );
     }
 

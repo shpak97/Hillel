@@ -1,6 +1,5 @@
 import {
   ConflictException,
-  ForbiddenException,
   HttpException,
   Injectable,
   InternalServerErrorException,
@@ -10,11 +9,10 @@ import { Table } from '@prisma/client';
 import {
   ACL_PERMISSION_READ,
   ACL_PERMISSION_WRITE,
-  ACL_RESOURCE_ID_ALL,
-  ACL_RESOURCE_RESTAURANT,
   ACL_RESOURCE_TABLE,
 } from 'src/acl/acl.constants';
 import { AclService } from 'src/acl/acl.service';
+import { assertTableMenuLinkAccess } from 'src/common/access/table-menu-link.access';
 import { isPrismaErrorCode } from 'src/common/utils/prisma-error.util';
 import {
   activeStateFromFlag,
@@ -23,6 +21,7 @@ import {
 import { RestaurantsService } from 'src/restaurants/restaurants.service';
 import { CreateTableDto, UpdateTableDto } from './dto/table.dto';
 import { TablesData } from './tables.data';
+import { TABLES_ERRORS } from './tables.errors';
 
 export type TableResponse = {
   uuid: string;
@@ -45,10 +44,15 @@ export class TablesService {
   async findAll(userId: number, restaurantId: string): Promise<TableResponse[]> {
     await this.assertRestaurantReadable(userId, restaurantId);
 
-    const canReadAll = await this.canReadAllTables(userId, restaurantId);
+    const hasAllReadAccess = await this.aclService.hasPermission({
+      userId,
+      restaurantId,
+      permission: ACL_PERMISSION_READ,
+      resource: ACL_RESOURCE_TABLE,
+    });
     const tables = await this.tablesData.findManyByRestaurant(restaurantId);
 
-    const filtered = canReadAll
+    const filtered = hasAllReadAccess
       ? tables
       : await this.filterReadableTables(userId, restaurantId, tables);
 
@@ -74,7 +78,7 @@ export class TablesService {
     restaurantId: string,
     dto: CreateTableDto,
   ): Promise<TableResponse> {
-    await this.assertCanCreateTable(userId, restaurantId);
+    await this.assertTableWriteAccess(userId, restaurantId);
 
     try {
       const table = await this.tablesData.create({
@@ -86,14 +90,12 @@ export class TablesService {
       return this.toResponse(table);
     } catch (error: unknown) {
       if (isPrismaErrorCode(error, 'P2002')) {
-        throw new ConflictException(
-          'Столик із такою назвою вже існує в цьому ресторані.',
-        );
+        throw new ConflictException(TABLES_ERRORS.LABEL_ALREADY_EXISTS);
       }
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('Не вдалося створити столик.');
+      throw new InternalServerErrorException(TABLES_ERRORS.CREATE_FAILED);
     }
   }
 
@@ -122,14 +124,12 @@ export class TablesService {
       return this.toResponse(table);
     } catch (error: unknown) {
       if (isPrismaErrorCode(error, 'P2002')) {
-        throw new ConflictException(
-          'Столик із такою назвою вже існує в цьому ресторані.',
-        );
+        throw new ConflictException(TABLES_ERRORS.LABEL_ALREADY_EXISTS);
       }
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('Не вдалося оновити столик.');
+      throw new InternalServerErrorException(TABLES_ERRORS.UPDATE_FAILED);
     }
   }
 
@@ -153,7 +153,7 @@ export class TablesService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('Не вдалося видалити столик.');
+      throw new InternalServerErrorException(TABLES_ERRORS.DELETE_FAILED);
     }
   }
 
@@ -171,19 +171,19 @@ export class TablesService {
     );
 
     for (const menuUuid of menuUuids) {
-      await this.aclService.assertCanLinkTableAndMenu(
+      await assertTableMenuLinkAccess(this.aclService, {
         userId,
         restaurantId,
         tableUuid,
         menuUuid,
-      );
+      });
     }
 
     await this.tablesData.replaceMenuLinks(tableUuid, menuUuids);
     const table = await this.tablesData.findByUuid(tableUuid);
 
     if (!table) {
-      throw new NotFoundException('Столик не знайдено.');
+      throw new NotFoundException(TABLES_ERRORS.NOT_FOUND);
     }
 
     return this.toResponse(table);
@@ -200,45 +200,18 @@ export class TablesService {
     );
   }
 
-  private async assertCanCreateTable(
+  private async assertTableWriteAccess(
     userId: number,
     restaurantId: string,
   ): Promise<void> {
     await this.assertRestaurantReadable(userId, restaurantId);
 
-    const canCreate =
-      (await this.aclService.can(
-        userId,
-        restaurantId,
-        ACL_PERMISSION_WRITE,
-        ACL_RESOURCE_RESTAURANT,
-      )) ||
-      (await this.aclService.can(
-        userId,
-        restaurantId,
-        ACL_PERMISSION_WRITE,
-        ACL_RESOURCE_TABLE,
-        ACL_RESOURCE_ID_ALL,
-      ));
-
-    if (!canCreate) {
-      throw new ForbiddenException('Немає доступу для створення столиків.');
-    }
-  }
-
-  private async canReadAllTables(
-    userId: number,
-    restaurantId: string,
-  ): Promise<boolean> {
-    return (
-      (await this.aclService.can(
-        userId,
-        restaurantId,
-        ACL_PERMISSION_READ,
-        ACL_RESOURCE_RESTAURANT,
-      )) ||
-      (await this.aclService.canReadAnyTable(userId, restaurantId))
-    );
+    await this.aclService.assertHasPermission({
+      userId,
+      restaurantId,
+      permission: ACL_PERMISSION_WRITE,
+      resource: ACL_RESOURCE_TABLE,
+    });
   }
 
   private async filterReadableTables(
@@ -248,13 +221,13 @@ export class TablesService {
   ): Promise<Table[]> {
     const results = await Promise.all(
       tables.map(async (table) => {
-        const allowed = await this.aclService.can(
+        const allowed = await this.aclService.hasPermission({
           userId,
           restaurantId,
-          ACL_PERMISSION_READ,
-          ACL_RESOURCE_TABLE,
-          table.uuid,
-        );
+          permission: ACL_PERMISSION_READ,
+          resource: ACL_RESOURCE_TABLE,
+          resourceId: table.uuid,
+        });
         return allowed ? table : null;
       }),
     );
@@ -273,54 +246,16 @@ export class TablesService {
     const table = await this.tablesData.findByUuid(tableUuid);
 
     if (!table || table.deletedAt || table.restaurantId !== restaurantId) {
-      throw new NotFoundException('Столик не знайдено.');
+      throw new NotFoundException(TABLES_ERRORS.NOT_FOUND);
     }
 
-    const canAccessAll = await this.canReadAllTables(userId, restaurantId);
-
-    if (canAccessAll) {
-      if (permission === ACL_PERMISSION_WRITE) {
-        const canWrite =
-          (await this.aclService.can(
-            userId,
-            restaurantId,
-            ACL_PERMISSION_WRITE,
-            ACL_RESOURCE_RESTAURANT,
-          )) ||
-          (await this.aclService.can(
-            userId,
-            restaurantId,
-            ACL_PERMISSION_WRITE,
-            ACL_RESOURCE_TABLE,
-            ACL_RESOURCE_ID_ALL,
-          )) ||
-          (await this.aclService.can(
-            userId,
-            restaurantId,
-            ACL_PERMISSION_WRITE,
-            ACL_RESOURCE_TABLE,
-            tableUuid,
-          ));
-
-        if (!canWrite) {
-          throw new ForbiddenException('Немає доступу до цього столика.');
-        }
-      }
-
-      return table;
-    }
-
-    const allowed = await this.aclService.can(
+    await this.aclService.assertHasPermission({
       userId,
       restaurantId,
       permission,
-      ACL_RESOURCE_TABLE,
-      tableUuid,
-    );
-
-    if (!allowed) {
-      throw new ForbiddenException('Немає доступу до цього столика.');
-    }
+      resource: ACL_RESOURCE_TABLE,
+      resourceId: tableUuid,
+    });
 
     return table;
   }

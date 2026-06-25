@@ -9,6 +9,14 @@ export const CurrentUser = createParamDecorator(
   },
 );
 
+export const CurrentUserId = createParamDecorator(
+  (_data: unknown, context: ExecutionContext): number => {
+    const request = context.switchToHttp().getRequest<Request>();
+    const user = request['user'] as ITokenPayload;
+    return getCurrentUserId(user);
+  },
+);
+
 export function getCurrentUserId(user: { uid: string | number }): number {
   return Number(user.uid);
 }

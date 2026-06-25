@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsJWT, IsNotEmpty } from 'class-validator';
 
 export class EmailVerificationEmailDto {
   @IsEmail()
@@ -7,6 +7,6 @@ export class EmailVerificationEmailDto {
 
 export class VerifyEmailQueryDto {
   @IsNotEmpty()
-  @IsString()
+  @IsJWT()
   token!: string;
 }

@@ -4,12 +4,10 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { AppModule } from './app.module';
-import { ensureRestaurantPhotosDir } from './uploads/restaurant-photos.multer';
-import { ensureMenuPhotosDir } from './uploads/menu-photos.multer';
+import { ensureAllImageUploadDirs } from './uploads/image-upload';
 
 async function bootstrap() {
-  ensureRestaurantPhotosDir();
-  ensureMenuPhotosDir();
+  ensureAllImageUploadDirs();
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
@@ -21,6 +19,6 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3101);
 }
 void bootstrap();

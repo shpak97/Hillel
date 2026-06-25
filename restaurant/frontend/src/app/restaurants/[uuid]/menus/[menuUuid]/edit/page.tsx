@@ -5,10 +5,16 @@ import {
   fetchMenuByUuid,
   fetchMenuHours,
 } from '@/features/menu/api/fetch-menus';
+import { fetchMenuSections } from '@/features/menu/api/fetch-menu-sections';
+import { fetchMenuItemsForRestaurant } from '@/features/menu/api/fetch-menu-items';
+import { fetchSectionMenuItems } from '@/features/menu/api/fetch-section-menu-items';
 import { fetchTablesForRestaurant } from '@/features/table/api/fetch-tables';
 import { MenuForm } from '@/features/menu/components/MenuForm';
+import { MenuSectionsPanel } from '@/features/menu/components/MenuSectionsPanel';
 import { AdminLayout } from '@/widgets/admin-layout/AdminLayout';
 import { ROUTES } from '@/shared/config/routes';
+import { resolveRestaurantCurrency } from '@/shared/lib/resolve-currency';
+import type { SectionMenuItem } from '@/features/menu/model/item-types';
 
 type EditMenuPageProps = {
   params: Promise<{ uuid: string; menuUuid: string }>;
@@ -16,16 +22,32 @@ type EditMenuPageProps = {
 
 export default async function EditMenuPage({ params }: EditMenuPageProps) {
   const { uuid, menuUuid } = await params;
-  const [restaurant, menu, tables, hours] = await Promise.all([
-    fetchRestaurantByUuid(uuid),
-    fetchMenuByUuid(uuid, menuUuid),
-    fetchTablesForRestaurant(uuid),
-    fetchMenuHours(uuid, menuUuid),
-  ]);
+  const [restaurant, menu, tables, hours, sections, catalogItems] =
+    await Promise.all([
+      fetchRestaurantByUuid(uuid),
+      fetchMenuByUuid(uuid, menuUuid),
+      fetchTablesForRestaurant(uuid),
+      fetchMenuHours(uuid, menuUuid),
+      fetchMenuSections(uuid, menuUuid),
+      fetchMenuItemsForRestaurant(uuid),
+    ]);
 
   if (!restaurant || !menu) {
     notFound();
   }
+
+  const linkedEntries = await Promise.all(
+    sections.map(
+      async (section) =>
+        [
+          section.uuid,
+          await fetchSectionMenuItems(uuid, menuUuid, section.uuid),
+        ] as const,
+    ),
+  );
+  const initialLinkedItemsBySection = Object.fromEntries(
+    linkedEntries,
+  ) as Record<string, SectionMenuItem[]>;
 
   return (
     <AdminLayout
@@ -55,6 +77,18 @@ export default async function EditMenuPage({ params }: EditMenuPageProps) {
         menu={menu}
         tables={tables}
         initialHours={hours}
+        afterContent={
+          <div className="mt-6">
+            <MenuSectionsPanel
+              restaurantUuid={uuid}
+              menuUuid={menuUuid}
+              currency={resolveRestaurantCurrency(restaurant.currency)}
+              catalogItems={catalogItems}
+              initialSections={sections}
+              initialLinkedItemsBySection={initialLinkedItemsBySection}
+            />
+          </div>
+        }
       />
     </AdminLayout>
   );

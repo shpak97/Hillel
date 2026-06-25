@@ -20,6 +20,7 @@ import {
   isEntityActive,
 } from 'src/common/utils/entity-active.util';
 import { PrismaService } from 'src/prisma.service';
+import { RESTAURANTS_ERRORS } from './restaurants.errors';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { RestaurantsData } from './restaurants.data';
@@ -34,6 +35,7 @@ export type RestaurantResponse = {
   address: string | null;
   photos: string[];
   timezone: string;
+  currency: string;
   isActive: boolean;
   deactivatedAt: string | null;
   ownerId: number;
@@ -88,6 +90,7 @@ export class RestaurantsService {
               : {}),
             photos,
             ...(dto.timezone !== undefined ? { timezone: dto.timezone } : {}),
+            ...(dto.currency !== undefined ? { currency: dto.currency } : {}),
             owner: { connect: { id: ownerId } },
           },
           tx,
@@ -100,14 +103,12 @@ export class RestaurantsService {
       return this.toResponse(restaurant);
     } catch (error: unknown) {
       if (isPrismaErrorCode(error, 'P2002')) {
-        throw new ConflictException(
-          'Ресторан із таким slug вже існує.',
-        );
+        throw new ConflictException(RESTAURANTS_ERRORS.SLUG_ALREADY_EXISTS);
       }
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('Не вдалося створити ресторан.');
+      throw new InternalServerErrorException(RESTAURANTS_ERRORS.CREATE_FAILED);
     }
   }
 
@@ -133,19 +134,18 @@ export class RestaurantsService {
           ? { address: this.normalizeOptionalString(dto.address) }
           : {}),
         ...(dto.timezone !== undefined ? { timezone: dto.timezone } : {}),
+        ...(dto.currency !== undefined ? { currency: dto.currency } : {}),
         ...(photos !== undefined ? { photos } : {}),
       });
       return this.toResponse(restaurant);
     } catch (error: unknown) {
       if (isPrismaErrorCode(error, 'P2002')) {
-        throw new ConflictException(
-          'Ресторан із таким slug вже існує.',
-        );
+        throw new ConflictException(RESTAURANTS_ERRORS.SLUG_ALREADY_EXISTS);
       }
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('Не вдалося оновити ресторан.');
+      throw new InternalServerErrorException(RESTAURANTS_ERRORS.UPDATE_FAILED);
     }
   }
 
@@ -161,7 +161,7 @@ export class RestaurantsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('Не вдалося вимкнути ресторан.');
+      throw new InternalServerErrorException(RESTAURANTS_ERRORS.DEACTIVATE_FAILED);
     }
   }
 
@@ -177,7 +177,7 @@ export class RestaurantsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('Не вдалося увімкнути ресторан.');
+      throw new InternalServerErrorException(RESTAURANTS_ERRORS.ACTIVATE_FAILED);
     }
   }
 
@@ -192,7 +192,7 @@ export class RestaurantsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('Не вдалося видалити ресторан.');
+      throw new InternalServerErrorException(RESTAURANTS_ERRORS.DELETE_FAILED);
     }
   }
 
@@ -204,36 +204,36 @@ export class RestaurantsService {
     const restaurant = await this.restaurantsData.findByUuid(uuid);
 
     if (!restaurant || restaurant.deletedAt) {
-      throw new NotFoundException('Ресторан не знайдено.');
+      throw new NotFoundException(RESTAURANTS_ERRORS.NOT_FOUND);
     }
 
     if (restaurant.ownerId === userId) {
       return restaurant;
     }
 
-    const hasRestaurantAccess = await this.aclService.can(
+    const hasRestaurantAccess = await this.aclService.hasPermission({
       userId,
-      uuid,
+      restaurantId: uuid,
       permission,
-      ACL_RESOURCE_RESTAURANT,
-    );
+      resource: ACL_RESOURCE_RESTAURANT,
+    });
 
     if (hasRestaurantAccess) {
       return restaurant;
     }
 
     if (permission === ACL_PERMISSION_READ) {
-      const hasAnyAccess = await this.aclService.hasAnyRestaurantAccess(
+      const permissions = await this.aclService.findPermissions({
         userId,
-        uuid,
-      );
+        restaurantId: uuid,
+      });
 
-      if (hasAnyAccess) {
+      if (permissions.length > 0) {
         return restaurant;
       }
     }
 
-    throw new ForbiddenException('Немає доступу до цього ресторану.');
+    throw new ForbiddenException(RESTAURANTS_ERRORS.ACCESS_DENIED);
   }
 
   private normalizeOptionalString(value: string): string | null {
@@ -250,6 +250,7 @@ export class RestaurantsService {
       address: restaurant.address,
       photos: restaurant.photos,
       timezone: restaurant.timezone,
+      currency: restaurant.currency,
       isActive: isEntityActive(restaurant.deactivatedAt, restaurant.deletedAt),
       deactivatedAt: restaurant.deactivatedAt?.toISOString() ?? null,
       ownerId: restaurant.ownerId,

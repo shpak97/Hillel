@@ -2,10 +2,11 @@
 
 import { FormEvent, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, FormAlert, Input, Textarea, TimezoneSelect } from '@/shared/ui';
+import { Button, FormAlert, Input, Textarea, TimezoneSelect, CurrencySelect } from '@/shared/ui';
 import { ROUTES } from '@/shared/config/routes';
 import { parseApiError } from '@/shared/api/error-message';
 import { resolveInitialTimezone } from '@/shared/lib/timezone';
+import { DEFAULT_CURRENCY, type SupportedCurrency } from '@/shared/model/currency';
 import { PUBLIC_MENU_BASE, generateSlugFromTitle } from '@/features/restaurant/lib/slug';
 import {
   MAX_RESTAURANT_PHOTOS,
@@ -23,6 +24,7 @@ export function RestaurantCreateForm() {
   const [description, setDescription] = useState('');
   const [address, setAddress] = useState('');
   const [timezone, setTimezone] = useState(() => resolveInitialTimezone());
+  const [currency, setCurrency] = useState<SupportedCurrency>(DEFAULT_CURRENCY);
   const [photos, setPhotos] = useState<File[]>([]);
   const [errors, setErrors] = useState<CreateRestaurantFormErrors>({});
   const [formError, setFormError] = useState('');
@@ -63,6 +65,7 @@ export function RestaurantCreateForm() {
     formData.append('description', description.trim());
     formData.append('address', address.trim());
     formData.append('timezone', timezone);
+    formData.append('currency', currency);
     for (const photo of photos) {
       formData.append('photos', photo);
     }
@@ -162,6 +165,12 @@ export function RestaurantCreateForm() {
             value={timezone}
             onChange={setTimezone}
             hint="Застосовується до годин ресторану, меню та розрахунку «відкрито зараз»."
+          />
+
+          <CurrencySelect
+            value={currency}
+            onChange={setCurrency}
+            hint="Валюта для цін продуктів і меню цього ресторану."
           />
 
           <fieldset className="rounded-[26px] border border-line bg-paper-50 p-4">

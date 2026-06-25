@@ -9,8 +9,8 @@ export class AppService {
     return 'Restaurant API';
   }
 
-  async getDbHealth() {
+  async getDbHealth(): Promise<{ status: string }> {
     await this.prisma.$queryRaw`SELECT 1`;
-    return { ok: true };
+    return { status: 'ok' };
   }
 }

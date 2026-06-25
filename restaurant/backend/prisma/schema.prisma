@@ -12,6 +12,15 @@ datasource db {
   provider = "postgresql"
 }
 
+enum MeasureUnit {
+  G
+  KG
+  ML
+  L
+  PCS
+  PORTION
+}
+
 model User {
   id            Int          @id @default(autoincrement())
   email         String       @unique
@@ -50,6 +59,7 @@ model Restaurant {
   address          String?
   photos           String[]                  @default([])
   timezone         String                    @default("Europe/Kyiv")
+  currency         String                    @default("UAH")
   deactivatedAt    DateTime?
   deletedAt        DateTime?
   ownerId          Int
@@ -58,6 +68,9 @@ model Restaurant {
   hours            RestaurantHours[]
   tables           Table[]
   menus            Menu[]
+  ingredients      Ingredient[]
+  products         Product[]
+  menuItems        MenuItem[]
   @@map("restaurant")
 }
 
@@ -102,9 +115,110 @@ model Menu {
   restaurant     Restaurant          @relation(fields: [restaurantId], references: [uuid], onDelete: Cascade)
   tableLinks     TableMenu[]
   hours          MenuHours[]
+  sections       MenuSection[]
 
   @@index([restaurantId])
   @@map("menu")
+}
+
+model Ingredient {
+  uuid           String                @id @default(uuid())
+  restaurantId   String
+  name           String
+  baseUnit       MeasureUnit
+  deactivatedAt  DateTime?
+  deletedAt      DateTime?
+  restaurant     Restaurant            @relation(fields: [restaurantId], references: [uuid], onDelete: Cascade)
+  productLinks   ProductIngredient[]
+
+  @@index([restaurantId])
+  @@map("ingredient")
+}
+
+model Product {
+  uuid           String              @id @default(uuid())
+  restaurantId   String
+  name           String
+  description    String?
+  photo          String?
+  baseUnit       MeasureUnit
+  basePrice      Decimal             @db.Decimal(10, 2)
+  deactivatedAt  DateTime?
+  deletedAt      DateTime?
+  restaurant     Restaurant          @relation(fields: [restaurantId], references: [uuid], onDelete: Cascade)
+  ingredients    ProductIngredient[]
+  menuItemLinks  MenuItemProduct[]
+
+  @@index([restaurantId])
+  @@map("product")
+}
+
+model ProductIngredient {
+  productId    String
+  ingredientId String
+  quantity     Decimal     @db.Decimal(12, 3)
+  unit         MeasureUnit
+  product      Product     @relation(fields: [productId], references: [uuid], onDelete: Cascade)
+  ingredient   Ingredient  @relation(fields: [ingredientId], references: [uuid], onDelete: Cascade)
+
+  @@id([productId, ingredientId])
+  @@map("product_ingredient")
+}
+
+model MenuSection {
+  uuid           String     @id @default(uuid())
+  menuId         String
+  name           String
+  sortOrder      Int        @default(0)
+  deactivatedAt  DateTime?
+  deletedAt      DateTime?
+  menu           Menu       @relation(fields: [menuId], references: [uuid], onDelete: Cascade)
+  itemLinks      MenuSectionItem[]
+
+  @@index([menuId, sortOrder])
+  @@map("menu_section")
+}
+
+model MenuItem {
+  uuid           String            @id @default(uuid())
+  restaurantId   String
+  name           String
+  description    String?
+  photo          String?
+  priceOverride  Decimal?          @db.Decimal(10, 2)
+  deactivatedAt  DateTime?
+  deletedAt      DateTime?
+  restaurant     Restaurant        @relation(fields: [restaurantId], references: [uuid], onDelete: Cascade)
+  products       MenuItemProduct[]
+  sectionLinks   MenuSectionItem[]
+
+  @@index([restaurantId])
+  @@map("menu_item")
+}
+
+model MenuSectionItem {
+  sectionId   String
+  menuItemId  String
+  sortOrder   Int         @default(0)
+  section     MenuSection @relation(fields: [sectionId], references: [uuid], onDelete: Cascade)
+  menuItem    MenuItem    @relation(fields: [menuItemId], references: [uuid], onDelete: Cascade)
+
+  @@id([sectionId, menuItemId])
+  @@index([sectionId, sortOrder])
+  @@map("menu_section_item")
+}
+
+model MenuItemProduct {
+  menuItemId    String
+  productId     String
+  sortOrder     Int       @default(0)
+  quantity      Decimal   @default(1) @db.Decimal(10, 3)
+  priceOverride Decimal?  @db.Decimal(10, 2)
+  menuItem      MenuItem  @relation(fields: [menuItemId], references: [uuid], onDelete: Cascade)
+  product       Product   @relation(fields: [productId], references: [uuid], onDelete: Cascade)
+
+  @@id([menuItemId, productId])
+  @@map("menu_item_product")
 }
 
 model TableMenu {

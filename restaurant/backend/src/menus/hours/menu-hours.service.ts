@@ -1,7 +1,7 @@
 import {
-  BadRequestException,
   Injectable,
 } from '@nestjs/common';
+import { validateHoursPayload } from 'src/common/validation/hours-payload.validation';
 import {
   ACL_PERMISSION_READ,
   ACL_PERMISSION_WRITE,
@@ -10,15 +10,10 @@ import {
   formatDateOnly,
   getZonedNow,
   isClosedInterval,
-  isValidTime,
   timeToMinutes,
 } from 'src/restaurants/hours/time.util';
 import { MenusService } from '../menus.service';
-import type {
-  HoursOverrideDto,
-  TimeIntervalDto,
-  UpdateMenuHoursDto,
-} from './dto/update-menu-hours.dto';
+import type { UpdateMenuHoursDto } from './dto/update-menu-hours.dto';
 import { MenuHoursData } from './menu-hours.data';
 import type {
   HoursOverride,
@@ -69,7 +64,7 @@ export class MenuHoursService {
       ACL_PERMISSION_WRITE,
     );
 
-    this.validateHoursPayload(dto);
+    validateHoursPayload(dto);
 
     await this.menuHoursData.replaceAll(menuId, dto.weekly, dto.overrides);
 
@@ -198,66 +193,5 @@ export class MenuHoursService {
       const closes = timeToMinutes(interval.closesAt);
       return minutes >= opens && minutes < closes;
     });
-  }
-
-  private validateHoursPayload(dto: UpdateMenuHoursDto): void {
-    const weeklyDays = new Set<number>();
-
-    for (const day of dto.weekly) {
-      if (weeklyDays.has(day.dayOfWeek)) {
-        throw new BadRequestException(
-          `Дубльований день тижня: ${day.dayOfWeek}`,
-        );
-      }
-      weeklyDays.add(day.dayOfWeek);
-      this.validateIntervals(day.intervals, `день ${day.dayOfWeek}`);
-    }
-
-    const overrideDates = new Set<string>();
-
-    for (const override of dto.overrides) {
-      if (overrideDates.has(override.date)) {
-        throw new BadRequestException(
-          `Дубльована дата винятку: ${override.date}`,
-        );
-      }
-      overrideDates.add(override.date);
-
-      if (override.isClosed) {
-        if (override.intervals.length > 0) {
-          throw new BadRequestException(
-            `Для закритої дати ${override.date} не можна вказувати інтервали`,
-          );
-        }
-        continue;
-      }
-
-      if (override.intervals.length === 0) {
-        throw new BadRequestException(
-          `Для дати ${override.date} потрібен хоча б один інтервал або isClosed`,
-        );
-      }
-
-      this.validateIntervals(override.intervals, `дата ${override.date}`);
-    }
-  }
-
-  private validateIntervals(
-    intervals: TimeIntervalDto[],
-    label: string,
-  ): void {
-    for (const interval of intervals) {
-      if (!isValidTime(interval.opensAt) || !isValidTime(interval.closesAt)) {
-        throw new BadRequestException(`Некоректний час для ${label}`);
-      }
-
-      if (timeToMinutes(interval.opensAt) >= timeToMinutes(interval.closesAt)) {
-        if (!isClosedInterval(interval.opensAt, interval.closesAt)) {
-          throw new BadRequestException(
-            `Час відкриття має бути раніше закриття (${label})`,
-          );
-        }
-      }
-    }
   }
 }

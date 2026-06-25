@@ -12,15 +12,17 @@ import {
   ValidateNested,
 } from 'class-validator';
 
+import { TIME_HH_MM_VALIDATION_MESSAGE } from 'src/common/validation/validation.messages';
+
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export class TimeIntervalDto {
   @IsString()
-  @Matches(TIME_PATTERN, { message: 'Час має бути у форматі HH:mm' })
+  @Matches(TIME_PATTERN, { message: TIME_HH_MM_VALIDATION_MESSAGE })
   opensAt!: string;
 
   @IsString()
-  @Matches(TIME_PATTERN, { message: 'Час має бути у форматі HH:mm' })
+  @Matches(TIME_PATTERN, { message: TIME_HH_MM_VALIDATION_MESSAGE })
   closesAt!: string;
 }
 

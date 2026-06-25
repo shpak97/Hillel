@@ -7,9 +7,21 @@ import { AuthModule } from './auth/auth.module';
 import { RestaurantsModule } from './restaurants/restaurants.module';
 import { TablesModule } from './tables/tables.module';
 import { MenusModule } from './menus/menus.module';
+import { IngredientsModule } from './ingredients/ingredients.module';
+import { ProductsModule } from './products/products.module';
+import { MenuItemsModule } from './menu-items/menu-items.module';
 
 @Module({
-  imports: [UsersModule, AuthModule, RestaurantsModule, TablesModule, MenusModule],
+  imports: [
+    UsersModule,
+    AuthModule,
+    RestaurantsModule,
+    TablesModule,
+    MenusModule,
+    IngredientsModule,
+    ProductsModule,
+    MenuItemsModule,
+  ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })

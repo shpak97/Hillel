@@ -5,6 +5,7 @@ import { AuthGuard } from './auth.guard';
 import { UsersModule } from 'src/users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { EmailModule } from 'src/email/email.module';
+import { getJwtSecret, JWT_SIGN_OPTIONS } from './jwt.config';
 
 @Module({
   imports: [
@@ -12,8 +13,8 @@ import { EmailModule } from 'src/email/email.module';
     EmailModule,
     JwtModule.register({
       global: true,
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '1d' },
+      secret: getJwtSecret(),
+      signOptions: JWT_SIGN_OPTIONS,
     }),
   ],
   controllers: [AuthController],

@@ -1,14 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { Acl, Prisma } from '@prisma/client';
 import {
-  ACL_PERMISSION_READ,
   ACL_PERMISSION_WRITE,
   ACL_RESOURCE_ID_ALL,
   ACL_RESOURCE_RESTAURANT,
-  type AclPermission,
-  type AclResource,
 } from './acl.constants';
 import { PrismaService } from '../prisma.service';
+
+export type FindPermissionsQuery = {
+  userId: number;
+  restaurantId: string;
+};
+
+export type IsRestaurantOwnerQuery = {
+  userId: number;
+  restaurantId: string;
+};
 
 @Injectable()
 export class AclData {
@@ -31,28 +38,20 @@ export class AclData {
     });
   }
 
-  findByUserAndRestaurant(
-    userId: number,
-    restaurantId: string,
-    tx?: Prisma.TransactionClient,
-  ): Promise<Acl[]> {
-    const client = tx ?? this.prisma;
-    return client.acl.findMany({
-      where: { userId, restaurantId },
-    });
+  findPermissions(query: FindPermissionsQuery): Promise<Acl[]> {
+    return this.prisma.acl.findMany({ where: query });
   }
 
-  isRestaurantOwner(
-    userId: number,
-    restaurantId: string,
-    tx?: Prisma.TransactionClient,
-  ): Promise<boolean> {
-    const client = tx ?? this.prisma;
-    return client.restaurant
-      .findFirst({
-        where: { uuid: restaurantId, ownerId: userId, deletedAt: null },
-        select: { uuid: true },
-      })
-      .then((restaurant) => restaurant !== null);
+  async isRestaurantOwner(query: IsRestaurantOwnerQuery): Promise<boolean> {
+    const restaurant = await this.prisma.restaurant.findFirst({
+      where: {
+        uuid: query.restaurantId,
+        ownerId: query.userId,
+        deletedAt: null,
+      },
+      select: { uuid: true },
+    });
+
+    return restaurant !== null;
   }
 }
