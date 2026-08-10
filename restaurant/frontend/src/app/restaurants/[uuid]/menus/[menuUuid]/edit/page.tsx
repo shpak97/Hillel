@@ -10,6 +10,7 @@ import { fetchMenuItemsForRestaurant } from '@/features/menu/api/fetch-menu-item
 import { fetchSectionMenuItems } from '@/features/menu/api/fetch-section-menu-items';
 import { fetchTablesForRestaurant } from '@/features/table/api/fetch-tables';
 import { MenuForm } from '@/features/menu/components/MenuForm';
+import { MenuQrPanel } from '@/features/menu/components/MenuQrPanel';
 import { MenuSectionsPanel } from '@/features/menu/components/MenuSectionsPanel';
 import { AdminLayout } from '@/widgets/admin-layout/AdminLayout';
 import { ROUTES } from '@/shared/config/routes';
@@ -78,7 +79,12 @@ export default async function EditMenuPage({ params }: EditMenuPageProps) {
         tables={tables}
         initialHours={hours}
         afterContent={
-          <div className="mt-6">
+          <div className="mt-6 space-y-6">
+            <MenuQrPanel
+              restaurantUuid={uuid}
+              restaurantSlug={restaurant.slug}
+              menuUuid={menuUuid}
+            />
             <MenuSectionsPanel
               restaurantUuid={uuid}
               menuUuid={menuUuid}

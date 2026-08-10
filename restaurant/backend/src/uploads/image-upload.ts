@@ -12,6 +12,7 @@ export const ImageEntityFolder = {
   MENU: 'menus',
   PRODUCT: 'products',
   MENU_ITEM: 'menu-items',
+  QR_LOGO: 'qr-logos',
 } as const;
 
 export type ImageEntityFolder =
@@ -69,10 +70,7 @@ export function createImageMulterOptions(
       cb: (error: Error | null, acceptFile: boolean) => void,
     ) => {
       if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
-        cb(
-          new BadRequestException(UPLOADS_ERRORS.INVALID_IMAGE_TYPE),
-          false,
-        );
+        cb(new BadRequestException(UPLOADS_ERRORS.INVALID_IMAGE_TYPE), false);
         return;
       }
 

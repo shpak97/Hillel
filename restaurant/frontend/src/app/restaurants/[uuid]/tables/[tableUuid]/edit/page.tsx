@@ -4,6 +4,7 @@ import { fetchRestaurantByUuid } from '@/features/restaurant/api/fetch-restauran
 import { fetchMenusForRestaurant } from '@/features/menu/api/fetch-menus';
 import { fetchTableByUuid } from '@/features/table/api/fetch-tables';
 import { TableForm } from '@/features/table/components/TableForm';
+import { TableQrPanel } from '@/features/table/components/TableQrPanel';
 import { AdminLayout } from '@/widgets/admin-layout/AdminLayout';
 import { ROUTES } from '@/shared/config/routes';
 
@@ -46,7 +47,14 @@ export default async function EditTablePage({ params }: EditTablePageProps) {
         </Link>
       </div>
 
-      <TableForm restaurantUuid={uuid} table={table} menus={menus} />
+      <div className="space-y-6">
+        <TableForm restaurantUuid={uuid} table={table} menus={menus} />
+        <TableQrPanel
+          restaurantUuid={uuid}
+          restaurantSlug={restaurant.slug}
+          tableUuid={tableUuid}
+        />
+      </div>
     </AdminLayout>
   );
 }

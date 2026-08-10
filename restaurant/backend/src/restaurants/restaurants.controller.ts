@@ -45,7 +45,9 @@ function parseExistingPhotos(value: unknown): string[] | undefined {
     try {
       const parsed = JSON.parse(value) as unknown;
       if (Array.isArray(parsed)) {
-        return parsed.filter((item): item is string => typeof item === 'string');
+        return parsed.filter(
+          (item): item is string => typeof item === 'string',
+        );
       }
     } catch {
       return undefined;
@@ -70,10 +72,7 @@ export class RestaurantsController {
   }
 
   @Get(':uuid/hours')
-  async getHours(
-    @CurrentUserId() userId: number,
-    @Param('uuid') uuid: string,
-  ) {
+  async getHours(@CurrentUserId() userId: number, @Param('uuid') uuid: string) {
     const result = await this.restaurantHoursService.getHours(userId, uuid);
     return validateResponseDto(HoursResponseDto, result);
   }
@@ -93,10 +92,7 @@ export class RestaurantsController {
   }
 
   @Get(':uuid')
-  async findOne(
-    @CurrentUserId() userId: number,
-    @Param('uuid') uuid: string,
-  ) {
+  async findOne(@CurrentUserId() userId: number, @Param('uuid') uuid: string) {
     const result = await this.restaurantsService.findOne(userId, uuid);
     return validateResponseDto(RestaurantResponseDto, result);
   }
@@ -114,11 +110,7 @@ export class RestaurantsController {
       getRestaurantPhotoPublicPath(file.filename),
     );
 
-    const result = await this.restaurantsService.create(
-      userId,
-      dto,
-      photos,
-    );
+    const result = await this.restaurantsService.create(userId, dto, photos);
     return validateResponseDto(RestaurantResponseDto, result);
   }
 
@@ -139,7 +131,9 @@ export class RestaurantsController {
     const dto: UpdateRestaurantDto = {
       ...(body.title !== undefined ? { title: body.title } : {}),
       ...(body.slug !== undefined ? { slug: body.slug } : {}),
-      ...(body.description !== undefined ? { description: body.description } : {}),
+      ...(body.description !== undefined
+        ? { description: body.description }
+        : {}),
       ...(body.address !== undefined ? { address: body.address } : {}),
       ...(body.timezone !== undefined ? { timezone: body.timezone } : {}),
       ...(body.currency !== undefined ? { currency: body.currency } : {}),
@@ -165,10 +159,7 @@ export class RestaurantsController {
   }
 
   @Patch(':uuid/activate')
-  async activate(
-    @CurrentUserId() userId: number,
-    @Param('uuid') uuid: string,
-  ) {
+  async activate(@CurrentUserId() userId: number, @Param('uuid') uuid: string) {
     const result = await this.restaurantsService.activate(userId, uuid);
     return validateResponseDto(RestaurantResponseDto, result);
   }

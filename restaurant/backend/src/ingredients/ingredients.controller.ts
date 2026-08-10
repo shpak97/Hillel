@@ -16,10 +16,7 @@ import {
   validateResponseDto,
   validateResponseDtoList,
 } from 'src/common/utils/validate-response.util';
-import {
-  CreateIngredientDto,
-  UpdateIngredientDto,
-} from './dto/ingredient.dto';
+import { CreateIngredientDto, UpdateIngredientDto } from './dto/ingredient.dto';
 import { IngredientResponseDto } from './dto/ingredient-response.dto';
 import { IngredientsService } from './ingredients.service';
 

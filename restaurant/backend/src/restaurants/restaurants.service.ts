@@ -52,7 +52,8 @@ export class RestaurantsService {
   ) {}
 
   async findAll(userId: number): Promise<RestaurantResponse[]> {
-    const restaurants = await this.restaurantsData.findManyAccessibleByUser(userId);
+    const restaurants =
+      await this.restaurantsData.findManyAccessibleByUser(userId);
     return restaurants.map((restaurant) => this.toResponse(restaurant));
   }
 
@@ -129,7 +130,9 @@ export class RestaurantsService {
       const restaurant = await this.restaurantsData.update(uuid, {
         ...(dto.title !== undefined ? { title: dto.title } : {}),
         ...(dto.slug !== undefined ? { slug: dto.slug } : {}),
-        ...(dto.description !== undefined ? { description: dto.description } : {}),
+        ...(dto.description !== undefined
+          ? { description: dto.description }
+          : {}),
         ...(dto.address !== undefined
           ? { address: this.normalizeOptionalString(dto.address) }
           : {}),
@@ -161,7 +164,9 @@ export class RestaurantsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException(RESTAURANTS_ERRORS.DEACTIVATE_FAILED);
+      throw new InternalServerErrorException(
+        RESTAURANTS_ERRORS.DEACTIVATE_FAILED,
+      );
     }
   }
 
@@ -177,7 +182,9 @@ export class RestaurantsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException(RESTAURANTS_ERRORS.ACTIVATE_FAILED);
+      throw new InternalServerErrorException(
+        RESTAURANTS_ERRORS.ACTIVATE_FAILED,
+      );
     }
   }
 

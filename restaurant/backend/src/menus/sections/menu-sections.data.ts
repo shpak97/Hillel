@@ -30,7 +30,10 @@ export class MenuSectionsData {
     return this.prisma.menuSection.create({ data });
   }
 
-  update(uuid: string, data: Prisma.MenuSectionUpdateInput): Promise<MenuSection> {
+  update(
+    uuid: string,
+    data: Prisma.MenuSectionUpdateInput,
+  ): Promise<MenuSection> {
     return this.prisma.menuSection.update({ where: { uuid }, data });
   }
 }

@@ -13,12 +13,19 @@ import {
 } from 'src/acl/acl.constants';
 import { AclService } from 'src/acl/acl.service';
 import { assertTableMenuLinkAccess } from 'src/common/access/table-menu-link.access';
+import { buildGuestTableUrl } from 'src/common/guest/guest-url.builder';
 import { isPrismaErrorCode } from 'src/common/utils/prisma-error.util';
 import {
   activeStateFromFlag,
   isEntityActive,
 } from 'src/common/utils/entity-active.util';
 import { RestaurantsService } from 'src/restaurants/restaurants.service';
+import type { QrFormat } from 'src/qr/qr.constants';
+import {
+  buildQrEndpointResult,
+  type QrEndpointResult,
+} from 'src/qr/qr-endpoint.util';
+import { QrService } from 'src/qr/qr.service';
 import { CreateTableDto, UpdateTableDto } from './dto/table.dto';
 import { TablesData } from './tables.data';
 import { TABLES_ERRORS } from './tables.errors';
@@ -33,15 +40,25 @@ export type TableResponse = {
   menuUuids: string[];
 };
 
+export type TableQrPayload = {
+  url: string;
+  pngDataUrl: string;
+  svg: string;
+};
+
 @Injectable()
 export class TablesService {
   constructor(
     private readonly tablesData: TablesData,
     private readonly restaurantsService: RestaurantsService,
     private readonly aclService: AclService,
+    private readonly qrService: QrService,
   ) {}
 
-  async findAll(userId: number, restaurantId: string): Promise<TableResponse[]> {
+  async findAll(
+    userId: number,
+    restaurantId: string,
+  ): Promise<TableResponse[]> {
     await this.assertRestaurantReadable(userId, restaurantId);
 
     const hasAllReadAccess = await this.aclService.hasPermission({
@@ -187,6 +204,42 @@ export class TablesService {
     }
 
     return this.toResponse(table);
+  }
+
+  async getQr(
+    userId: number,
+    restaurantId: string,
+    tableUuid: string,
+    format: QrFormat,
+  ): Promise<QrEndpointResult<TableQrPayload>> {
+    const restaurant = await this.restaurantsService.assertAccess(
+      userId,
+      restaurantId,
+      ACL_PERMISSION_READ,
+    );
+    await this.getAccessibleTable(
+      userId,
+      restaurantId,
+      tableUuid,
+      ACL_PERMISSION_WRITE,
+    );
+
+    const url = buildGuestTableUrl({
+      restaurantSlug: restaurant.slug,
+      tableUuid,
+    });
+
+    return buildQrEndpointResult(
+      this.qrService,
+      url,
+      format,
+      `table-${tableUuid}-qr`,
+      (payload) => payload,
+      {
+        style: restaurant.qrStyle,
+        logo: restaurant.qrLogo,
+      },
+    );
   }
 
   private async assertRestaurantReadable(

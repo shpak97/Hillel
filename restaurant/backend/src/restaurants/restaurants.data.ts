@@ -44,6 +44,10 @@ export class RestaurantsData {
     return this.prisma.restaurant.findUnique({ where: { uuid } });
   }
 
+  findBySlug(slug: string): Promise<Restaurant | null> {
+    return this.prisma.restaurant.findUnique({ where: { slug } });
+  }
+
   create(
     data: Prisma.RestaurantCreateInput,
     tx?: Prisma.TransactionClient,

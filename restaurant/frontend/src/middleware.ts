@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { refreshAccessTokenFromBackend } from '@/features/auth/api/refresh-access-token';
 import { AUTH_COOKIES, getAuthCookieOptions } from '@/shared/config/cookies';
-import { PUBLIC_ROUTES, ROUTES } from '@/shared/config/routes';
+import { ROUTES, isPublicPath } from '@/shared/config/routes';
 import { isJwtExpired } from '@/shared/lib/jwt';
 
 function redirectToLogin(request: NextRequest) {
@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const isPublic = PUBLIC_ROUTES.includes(pathname);
+  const isPublic = isPublicPath(pathname);
   let accessToken = request.cookies.get(AUTH_COOKIES.accessToken)?.value;
   const refreshToken = request.cookies.get(AUTH_COOKIES.refreshToken)?.value;
 

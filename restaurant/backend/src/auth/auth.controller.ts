@@ -31,7 +31,9 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async register(@Body() registerRequestDto: RegisterRequestDto): Promise<void> {
+  async register(
+    @Body() registerRequestDto: RegisterRequestDto,
+  ): Promise<void> {
     await this.authService.register(registerRequestDto);
   }
 

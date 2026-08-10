@@ -6,7 +6,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Product } from '@prisma/client';
-import { ACL_PERMISSION_READ, ACL_PERMISSION_WRITE } from 'src/acl/acl.constants';
+import {
+  ACL_PERMISSION_READ,
+  ACL_PERMISSION_WRITE,
+} from 'src/acl/acl.constants';
 import {
   activeStateFromFlag,
   isEntityActive,
@@ -49,8 +52,15 @@ export class ProductsService {
     private readonly restaurantsService: RestaurantsService,
   ) {}
 
-  async findAll(userId: number, restaurantId: string): Promise<ProductResponse[]> {
-    await this.assertRestaurantAccess(userId, restaurantId, ACL_PERMISSION_READ);
+  async findAll(
+    userId: number,
+    restaurantId: string,
+  ): Promise<ProductResponse[]> {
+    await this.assertRestaurantAccess(
+      userId,
+      restaurantId,
+      ACL_PERMISSION_READ,
+    );
     const products =
       await this.productsData.findManyByRestaurantWithRecipe(restaurantId);
 
@@ -70,11 +80,10 @@ export class ProductsService {
       uuid,
       ACL_PERMISSION_READ,
     );
-    const withRecipe = await this.productsData.findByUuidWithRecipe(product.uuid);
-    return this.toResponse(
-      withRecipe ?? product,
-      withRecipe?.ingredients,
+    const withRecipe = await this.productsData.findByUuidWithRecipe(
+      product.uuid,
     );
+    return this.toResponse(withRecipe ?? product, withRecipe?.ingredients);
   }
 
   async create(
@@ -83,7 +92,11 @@ export class ProductsService {
     dto: CreateProductDto,
     photo?: string,
   ): Promise<ProductResponse> {
-    await this.assertRestaurantAccess(userId, restaurantId, ACL_PERMISSION_WRITE);
+    await this.assertRestaurantAccess(
+      userId,
+      restaurantId,
+      ACL_PERMISSION_WRITE,
+    );
 
     try {
       const product = await this.productsData.create({
@@ -120,7 +133,9 @@ export class ProductsService {
     try {
       const product = await this.productsData.update(uuid, {
         ...(dto.name !== undefined ? { name: dto.name } : {}),
-        ...(dto.description !== undefined ? { description: dto.description } : {}),
+        ...(dto.description !== undefined
+          ? { description: dto.description }
+          : {}),
         ...(dto.baseUnit !== undefined ? { baseUnit: dto.baseUnit } : {}),
         ...(dto.basePrice !== undefined
           ? { basePrice: parseMoneyInput(dto.basePrice) }
@@ -131,11 +146,10 @@ export class ProductsService {
           : {}),
       });
 
-      const withRecipe = await this.productsData.findByUuidWithRecipe(product.uuid);
-      return this.toResponse(
-        withRecipe ?? product,
-        withRecipe?.ingredients,
+      const withRecipe = await this.productsData.findByUuidWithRecipe(
+        product.uuid,
       );
+      return this.toResponse(withRecipe ?? product, withRecipe?.ingredients);
     } catch (error: unknown) {
       if (error instanceof HttpException) {
         throw error;
@@ -160,11 +174,15 @@ export class ProductsService {
     const ingredientIds = new Set<string>();
     for (const item of dto.ingredients) {
       if (ingredientIds.has(item.ingredientId)) {
-        throw new BadRequestException(PRODUCTS_ERRORS.DUPLICATE_RECIPE_INGREDIENT);
+        throw new BadRequestException(
+          PRODUCTS_ERRORS.DUPLICATE_RECIPE_INGREDIENT,
+        );
       }
       ingredientIds.add(item.ingredientId);
 
-      const ingredient = await this.ingredientsData.findByUuid(item.ingredientId);
+      const ingredient = await this.ingredientsData.findByUuid(
+        item.ingredientId,
+      );
       if (
         !ingredient ||
         ingredient.deletedAt ||
@@ -204,7 +222,9 @@ export class ProductsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException(PRODUCTS_ERRORS.RECIPE_UPDATE_FAILED);
+      throw new InternalServerErrorException(
+        PRODUCTS_ERRORS.RECIPE_UPDATE_FAILED,
+      );
     }
   }
 
@@ -235,7 +255,11 @@ export class ProductsService {
     restaurantId: string,
     permission: typeof ACL_PERMISSION_READ | typeof ACL_PERMISSION_WRITE,
   ): Promise<void> {
-    await this.restaurantsService.assertAccess(userId, restaurantId, permission);
+    await this.restaurantsService.assertAccess(
+      userId,
+      restaurantId,
+      permission,
+    );
   }
 
   private async getAccessibleProduct(
@@ -247,7 +271,11 @@ export class ProductsService {
     await this.assertRestaurantAccess(userId, restaurantId, permission);
 
     const product = await this.productsData.findByUuid(uuid);
-    if (!product || product.deletedAt || product.restaurantId !== restaurantId) {
+    if (
+      !product ||
+      product.deletedAt ||
+      product.restaurantId !== restaurantId
+    ) {
       throw new NotFoundException(PRODUCTS_ERRORS.NOT_FOUND);
     }
 

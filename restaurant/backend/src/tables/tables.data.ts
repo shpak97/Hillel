@@ -37,10 +37,7 @@ export class TablesData {
     });
   }
 
-  async replaceMenuLinks(
-    tableId: string,
-    menuIds: string[],
-  ): Promise<void> {
+  async replaceMenuLinks(tableId: string, menuIds: string[]): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       await tx.tableMenu.deleteMany({ where: { tableId } });
 

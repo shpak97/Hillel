@@ -93,7 +93,9 @@ export class MenuSectionsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException(MENU_SECTIONS_ERRORS.CREATE_FAILED);
+      throw new InternalServerErrorException(
+        MENU_SECTIONS_ERRORS.CREATE_FAILED,
+      );
     }
   }
 
@@ -124,7 +126,9 @@ export class MenuSectionsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException(MENU_SECTIONS_ERRORS.UPDATE_FAILED);
+      throw new InternalServerErrorException(
+        MENU_SECTIONS_ERRORS.UPDATE_FAILED,
+      );
     }
   }
 
@@ -143,12 +147,16 @@ export class MenuSectionsService {
     );
 
     try {
-      await this.menuSectionsData.update(sectionUuid, { deletedAt: new Date() });
+      await this.menuSectionsData.update(sectionUuid, {
+        deletedAt: new Date(),
+      });
     } catch (error: unknown) {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException(MENU_SECTIONS_ERRORS.DELETE_FAILED);
+      throw new InternalServerErrorException(
+        MENU_SECTIONS_ERRORS.DELETE_FAILED,
+      );
     }
   }
 

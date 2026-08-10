@@ -6,7 +6,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { MenuItem } from '@prisma/client';
-import { ACL_PERMISSION_READ, ACL_PERMISSION_WRITE } from 'src/acl/acl.constants';
+import {
+  ACL_PERMISSION_READ,
+  ACL_PERMISSION_WRITE,
+} from 'src/acl/acl.constants';
 import {
   activeStateFromFlag,
   isEntityActive,
@@ -57,7 +60,11 @@ export class MenuItemsService {
     userId: number,
     restaurantId: string,
   ): Promise<MenuItemResponse[]> {
-    await this.assertRestaurantAccess(userId, restaurantId, ACL_PERMISSION_READ);
+    await this.assertRestaurantAccess(
+      userId,
+      restaurantId,
+      ACL_PERMISSION_READ,
+    );
     const items =
       await this.menuItemsData.findManyByRestaurantWithProducts(restaurantId);
 
@@ -87,7 +94,11 @@ export class MenuItemsService {
     dto: CreateMenuItemDto,
     photo?: string,
   ): Promise<MenuItemResponse> {
-    await this.assertRestaurantAccess(userId, restaurantId, ACL_PERMISSION_WRITE);
+    await this.assertRestaurantAccess(
+      userId,
+      restaurantId,
+      ACL_PERMISSION_WRITE,
+    );
 
     try {
       const item = await this.menuItemsData.create({
@@ -125,7 +136,9 @@ export class MenuItemsService {
     try {
       const item = await this.menuItemsData.update(itemUuid, {
         ...(dto.name !== undefined ? { name: dto.name } : {}),
-        ...(dto.description !== undefined ? { description: dto.description } : {}),
+        ...(dto.description !== undefined
+          ? { description: dto.description }
+          : {}),
         ...(photoPatch !== undefined ? { photo: photoPatch } : {}),
         ...(dto.isActive !== undefined
           ? activeStateFromFlag(dto.isActive)
@@ -135,7 +148,9 @@ export class MenuItemsService {
           : {}),
       });
 
-      const withProducts = await this.menuItemsData.findByUuidWithProducts(item.uuid);
+      const withProducts = await this.menuItemsData.findByUuidWithProducts(
+        item.uuid,
+      );
       return this.toResponse(withProducts ?? item, withProducts?.products);
     } catch (error: unknown) {
       if (error instanceof HttpException) {
@@ -166,7 +181,11 @@ export class MenuItemsService {
       productIds.add(item.productId);
 
       const product = await this.productsData.findByUuid(item.productId);
-      if (!product || product.deletedAt || product.restaurantId !== restaurantId) {
+      if (
+        !product ||
+        product.deletedAt ||
+        product.restaurantId !== restaurantId
+      ) {
         throw new BadRequestException(
           MENU_ITEMS_ERRORS.productNotFoundInRestaurant(item.productId),
         );
@@ -234,7 +253,11 @@ export class MenuItemsService {
     restaurantId: string,
     permission: typeof ACL_PERMISSION_READ | typeof ACL_PERMISSION_WRITE,
   ): Promise<void> {
-    await this.restaurantsService.assertAccess(userId, restaurantId, permission);
+    await this.restaurantsService.assertAccess(
+      userId,
+      restaurantId,
+      permission,
+    );
   }
 
   private async getAccessibleItem(
@@ -277,7 +300,9 @@ export class MenuItemsService {
         productName: line.product.name,
         quantity,
         priceOverride:
-          line.priceOverride !== null ? toMoneyNumber(line.priceOverride) : null,
+          line.priceOverride !== null
+            ? toMoneyNumber(line.priceOverride)
+            : null,
         unitPrice,
         linePrice: toMoneyNumber(unitPrice * quantity),
         sortOrder: line.sortOrder,

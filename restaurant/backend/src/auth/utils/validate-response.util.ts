@@ -1,1 +1,4 @@
-export { validateResponseDto, validateResponseDtoList } from 'src/common/utils/validate-response.util';
+export {
+  validateResponseDto,
+  validateResponseDtoList,
+} from 'src/common/utils/validate-response.util';

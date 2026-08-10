@@ -6,7 +6,9 @@ import {
   ImageEntityFolder,
 } from './image-upload';
 
-export const RESTAURANT_PHOTOS_DIR = getImageEntityDir(ImageEntityFolder.RESTAURANT);
+export const RESTAURANT_PHOTOS_DIR = getImageEntityDir(
+  ImageEntityFolder.RESTAURANT,
+);
 
 export function ensureRestaurantPhotosDir() {
   ensureImageUploadDir(ImageEntityFolder.RESTAURANT);

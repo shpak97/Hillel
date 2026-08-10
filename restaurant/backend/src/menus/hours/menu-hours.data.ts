@@ -24,12 +24,12 @@ export class MenuHoursData {
   }
 
   getRestaurantTimezone(menuId: string): Promise<{ timezone: string } | null> {
-    return this.prisma.menu.findUnique({
-      where: { uuid: menuId },
-      select: { restaurant: { select: { timezone: true } } },
-    }).then((menu) =>
-      menu ? { timezone: menu.restaurant.timezone } : null,
-    );
+    return this.prisma.menu
+      .findUnique({
+        where: { uuid: menuId },
+        select: { restaurant: { select: { timezone: true } } },
+      })
+      .then((menu) => (menu ? { timezone: menu.restaurant.timezone } : null));
   }
 
   async replaceAll(

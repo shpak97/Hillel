@@ -2,8 +2,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { fetchRestaurantByUuid } from '@/features/restaurant/api/fetch-restaurant-by-uuid';
 import { fetchRestaurantHours } from '@/features/restaurant/api/fetch-restaurant-hours';
+import { fetchRestaurantQrStyle } from '@/features/restaurant/api/fetch-qr-style';
 import { RestaurantEditForm } from '@/features/restaurant/components/RestaurantEditForm';
 import { RestaurantHoursForm } from '@/features/restaurant/components/RestaurantHoursForm';
+import { RestaurantQrStyleForm } from '@/features/restaurant/components/RestaurantQrStyleForm';
 import { AdminLayout } from '@/widgets/admin-layout/AdminLayout';
 import { ROUTES } from '@/shared/config/routes';
 
@@ -15,9 +17,10 @@ export default async function RestaurantEditPage({
   params,
 }: RestaurantEditPageProps) {
   const { uuid } = await params;
-  const [restaurant, hours] = await Promise.all([
+  const [restaurant, hours, qrStyle] = await Promise.all([
     fetchRestaurantByUuid(uuid),
     fetchRestaurantHours(uuid),
+    fetchRestaurantQrStyle(uuid),
   ]);
 
   if (!restaurant) {
@@ -77,7 +80,18 @@ export default async function RestaurantEditPage({
       <RestaurantEditForm restaurant={restaurant} />
 
       <div className="mt-6">
-        <RestaurantHoursForm restaurantUuid={restaurant.uuid} initialHours={hours} />
+        <RestaurantHoursForm
+          restaurantUuid={restaurant.uuid}
+          initialHours={hours}
+        />
+      </div>
+
+      <div className="mt-6">
+        <RestaurantQrStyleForm
+          restaurantUuid={restaurant.uuid}
+          restaurantSlug={restaurant.slug}
+          initial={qrStyle}
+        />
       </div>
     </AdminLayout>
   );

@@ -8,11 +8,7 @@ import { ProductsData } from './products.data';
 import { ProductsService } from './products.service';
 
 @Module({
-  imports: [
-    AuthModule,
-    IngredientsModule,
-    forwardRef(() => RestaurantsModule),
-  ],
+  imports: [AuthModule, IngredientsModule, forwardRef(() => RestaurantsModule)],
   controllers: [ProductsController],
   providers: [ProductsService, ProductsData, PrismaService],
   exports: [ProductsService, ProductsData],

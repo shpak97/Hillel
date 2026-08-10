@@ -21,7 +21,10 @@ export class IngredientsData {
     return this.prisma.ingredient.create({ data });
   }
 
-  update(uuid: string, data: Prisma.IngredientUpdateInput): Promise<Ingredient> {
+  update(
+    uuid: string,
+    data: Prisma.IngredientUpdateInput,
+  ): Promise<Ingredient> {
     return this.prisma.ingredient.update({ where: { uuid }, data });
   }
 }

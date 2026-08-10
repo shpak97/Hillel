@@ -1,8 +1,9 @@
-import {
-  Injectable,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { validateHoursPayload } from 'src/common/validation/hours-payload.validation';
-import { ACL_PERMISSION_READ, ACL_PERMISSION_WRITE } from 'src/acl/acl.constants';
+import {
+  ACL_PERMISSION_READ,
+  ACL_PERMISSION_WRITE,
+} from 'src/acl/acl.constants';
 import { RestaurantsService } from '../restaurants.service';
 import type { UpdateRestaurantHoursDto } from './dto/update-restaurant-hours.dto';
 import { RestaurantHoursData } from './restaurant-hours.data';
@@ -125,7 +126,10 @@ export class RestaurantHoursService {
   }
 
   private groupOverrideRows(rows: HoursRecord[]): HoursOverride[] {
-    const byDate = new Map<string, { isClosed: boolean; intervals: TimeInterval[] }>();
+    const byDate = new Map<
+      string,
+      { isClosed: boolean; intervals: TimeInterval[] }
+    >();
 
     for (const row of rows) {
       const date = formatDateOnly(row.date!);
@@ -155,7 +159,6 @@ export class RestaurantHoursService {
     overrides: HoursOverride[],
     target: ZonedNow,
   ): ResolvedDayHours {
-
     const override = overrides.find((item) => item.date === target.date);
 
     if (override) {
@@ -173,7 +176,9 @@ export class RestaurantHoursService {
       };
     }
 
-    const weeklyDay = weekly.find((item) => item.dayOfWeek === target.dayOfWeek);
+    const weeklyDay = weekly.find(
+      (item) => item.dayOfWeek === target.dayOfWeek,
+    );
     const intervals = weeklyDay?.intervals ?? [];
     const isClosed = intervals.length === 0;
 

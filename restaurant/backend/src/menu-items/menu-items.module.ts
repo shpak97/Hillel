@@ -8,11 +8,7 @@ import { MenuItemsData } from './menu-items.data';
 import { MenuItemsService } from './menu-items.service';
 
 @Module({
-  imports: [
-    AuthModule,
-    ProductsModule,
-    forwardRef(() => RestaurantsModule),
-  ],
+  imports: [AuthModule, ProductsModule, forwardRef(() => RestaurantsModule)],
   controllers: [MenuItemsController],
   providers: [MenuItemsService, MenuItemsData, PrismaService],
   exports: [MenuItemsService, MenuItemsData],

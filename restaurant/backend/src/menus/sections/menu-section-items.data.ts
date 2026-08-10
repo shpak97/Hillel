@@ -22,7 +22,10 @@ export class MenuSectionItemsData {
     });
   }
 
-  async replaceSectionItems(sectionId: string, itemIds: string[]): Promise<void> {
+  async replaceSectionItems(
+    sectionId: string,
+    itemIds: string[],
+  ): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       await tx.menuSectionItem.deleteMany({ where: { sectionId } });
 

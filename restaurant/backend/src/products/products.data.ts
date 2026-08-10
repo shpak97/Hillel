@@ -63,7 +63,11 @@ export class ProductsData {
 
   async replaceRecipe(
     productId: string,
-    items: { ingredientId: string; quantity: number; unit: Product['baseUnit'] }[],
+    items: {
+      ingredientId: string;
+      quantity: number;
+      unit: Product['baseUnit'];
+    }[],
   ): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       await tx.productIngredient.deleteMany({ where: { productId } });

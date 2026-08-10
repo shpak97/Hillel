@@ -12,11 +12,18 @@ import {
 } from 'src/acl/acl.constants';
 import { AclService } from 'src/acl/acl.service';
 import { assertTableMenuLinkAccess } from 'src/common/access/table-menu-link.access';
+import { buildGuestMenuUrl } from 'src/common/guest/guest-url.builder';
 import {
   activeStateFromFlag,
   isEntityActive,
 } from 'src/common/utils/entity-active.util';
 import { RestaurantsService } from 'src/restaurants/restaurants.service';
+import type { QrFormat } from 'src/qr/qr.constants';
+import {
+  buildQrEndpointResult,
+  type QrEndpointResult,
+} from 'src/qr/qr-endpoint.util';
+import { QrService } from 'src/qr/qr.service';
 import { CreateMenuDto, UpdateMenuDto } from './dto/menu.dto';
 import { MenusData } from './menus.data';
 import { MENUS_ERRORS } from './menus.errors';
@@ -31,12 +38,20 @@ export type MenuResponse = {
   tableUuids: string[];
 };
 
+export type MenuQrPayload = {
+  url: string;
+  selectTable: boolean;
+  pngDataUrl: string;
+  svg: string;
+};
+
 @Injectable()
 export class MenusService {
   constructor(
     private readonly menusData: MenusData,
     private readonly restaurantsService: RestaurantsService,
     private readonly aclService: AclService,
+    private readonly qrService: QrService,
   ) {}
 
   async findAll(userId: number, restaurantId: string): Promise<MenuResponse[]> {
@@ -119,7 +134,9 @@ export class MenusService {
     try {
       const menu = await this.menusData.update(menuUuid, {
         ...(dto.name !== undefined ? { name: dto.name } : {}),
-        ...(dto.description !== undefined ? { description: dto.description } : {}),
+        ...(dto.description !== undefined
+          ? { description: dto.description }
+          : {}),
         ...(photo !== undefined ? { photo } : {}),
         ...(dto.isActive !== undefined
           ? activeStateFromFlag(dto.isActive)
@@ -197,6 +214,46 @@ export class MenusService {
     permission: typeof ACL_PERMISSION_READ | typeof ACL_PERMISSION_WRITE,
   ): Promise<Menu> {
     return this.getAccessibleMenu(userId, restaurantId, menuUuid, permission);
+  }
+
+  async getQr(
+    userId: number,
+    restaurantId: string,
+    menuUuid: string,
+    options: { selectTable: boolean; format: QrFormat },
+  ): Promise<QrEndpointResult<MenuQrPayload>> {
+    const restaurant = await this.restaurantsService.assertAccess(
+      userId,
+      restaurantId,
+      ACL_PERMISSION_READ,
+    );
+    await this.getAccessibleMenu(
+      userId,
+      restaurantId,
+      menuUuid,
+      ACL_PERMISSION_WRITE,
+    );
+
+    const url = buildGuestMenuUrl({
+      restaurantSlug: restaurant.slug,
+      menuUuid,
+      selectTable: options.selectTable,
+    });
+
+    return buildQrEndpointResult(
+      this.qrService,
+      url,
+      options.format,
+      `menu-${menuUuid}-qr`,
+      (payload) => ({
+        ...payload,
+        selectTable: options.selectTable,
+      }),
+      {
+        style: restaurant.qrStyle,
+        logo: restaurant.qrLogo,
+      },
+    );
   }
 
   private async assertRestaurantReadable(

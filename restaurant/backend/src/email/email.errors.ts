@@ -7,7 +7,8 @@ export const EMAIL_ERRORS = {
   },
   NOT_CONFIGURED_SENDGRID: {
     code: 'EMAIL_NOT_CONFIGURED',
-    message: 'Email delivery is not configured (SEND_GRID_API_KEY / MAIL_FROM).',
+    message:
+      'Email delivery is not configured (SEND_GRID_API_KEY / MAIL_FROM).',
   },
   SEND_FAILED: {
     code: 'EMAIL_SEND_FAILED',

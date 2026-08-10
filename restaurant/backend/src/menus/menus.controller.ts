@@ -9,7 +9,9 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   Req,
+  StreamableFile,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -30,6 +32,9 @@ import {
   validateResponseDto,
   validateResponseDtoList,
 } from 'src/common/utils/validate-response.util';
+import { MenuQrQueryDto } from 'src/qr/dto/qr-query.dto';
+import { MenuQrResponseDto } from 'src/qr/dto/qr-response.dto';
+import { toQrHttpResult } from 'src/qr/qr-endpoint.util';
 import {
   getMenuPhotoPublicPath,
   menuPhotoMulterOptions,
@@ -91,6 +96,28 @@ export class MenusController {
     return validateResponseDto(HoursResponseDto, result);
   }
 
+  @Get(':menuUuid/qr')
+  async getQr(
+    @CurrentUserId() userId: number,
+    @Param('restaurantUuid') restaurantUuid: string,
+    @Param('menuUuid') menuUuid: string,
+    @Query() query: MenuQrQueryDto,
+  ): Promise<MenuQrResponseDto | StreamableFile> {
+    const result = await this.menusService.getQr(
+      userId,
+      restaurantUuid,
+      menuUuid,
+      {
+        selectTable: query.selectTable,
+        format: query.format,
+      },
+    );
+
+    return toQrHttpResult(result, (payload) =>
+      validateResponseDto(MenuQrResponseDto, payload),
+    );
+  }
+
   @Get(':menuUuid')
   async findOne(
     @CurrentUserId() userId: number,
@@ -138,9 +165,7 @@ export class MenusController {
     const dto = stripRemovePhoto(
       validateDto(
         UpdateMenuDto,
-        isMultipart
-          ? parseUpdateMenuDto(body as Record<string, string>)
-          : body,
+        isMultipart ? parseUpdateMenuDto(body as Record<string, string>) : body,
       ),
     );
     const removePhoto = isMultipart

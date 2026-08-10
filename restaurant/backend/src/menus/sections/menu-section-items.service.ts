@@ -9,7 +9,10 @@ import {
   ACL_PERMISSION_READ,
   ACL_PERMISSION_WRITE,
 } from 'src/acl/acl.constants';
-import { MenuItemsService, MenuItemResponse } from 'src/menu-items/menu-items.service';
+import {
+  MenuItemsService,
+  MenuItemResponse,
+} from 'src/menu-items/menu-items.service';
 import { MenuItemsData } from 'src/menu-items/menu-items.data';
 import { ReplaceMenuSectionItemsDto } from './dto/menu-section-items.dto';
 import { MenuSectionItemsData } from './menu-section-items.data';
@@ -45,7 +48,8 @@ export class MenuSectionItemsService {
       ACL_PERMISSION_READ,
     );
 
-    const links = await this.menuSectionItemsData.findManyBySection(sectionUuid);
+    const links =
+      await this.menuSectionItemsData.findManyBySection(sectionUuid);
 
     return links
       .filter((link) => !link.menuItem.deletedAt)

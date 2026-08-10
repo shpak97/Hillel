@@ -29,6 +29,14 @@ export const ROUTES = {
   restaurantMenuItemNew: (uuid: string) => `/restaurants/${uuid}/menu-items/new`,
   restaurantMenuItemEdit: (restaurantUuid: string, itemUuid: string) =>
     `/restaurants/${restaurantUuid}/menu-items/${itemUuid}/edit`,
+  restaurantQrCodes: (uuid: string) => `/restaurants/${uuid}/qr-codes`,
+  restaurantQrCodeNew: (uuid: string) => `/restaurants/${uuid}/qr-codes/new`,
+  restaurantQrCodeEdit: (restaurantUuid: string, qrCodeUuid: string) =>
+    `/restaurants/${restaurantUuid}/qr-codes/${qrCodeUuid}/edit`,
+  guestMenu: (slug: string, menuUuid: string, selectTable = false) =>
+    `/r/${slug}/m/${menuUuid}?selectTable=${selectTable ? '1' : '0'}`,
+  guestTable: (slug: string, tableUuid: string) => `/r/${slug}/t/${tableUuid}`,
+  guestQr: (slug: string, qrUuid: string) => `/r/${slug}/q/${qrUuid}`,
 } as const;
 
 export const PUBLIC_ROUTES: string[] = [
@@ -38,6 +46,14 @@ export const PUBLIC_ROUTES: string[] = [
   ROUTES.forgotPassword,
   ROUTES.resetPassword,
 ];
+
+export function isPublicPath(pathname: string): boolean {
+  if (PUBLIC_ROUTES.includes(pathname)) {
+    return true;
+  }
+
+  return pathname === '/r' || pathname.startsWith('/r/');
+}
 
 export type AdminNavItem = {
   label: string;
@@ -76,7 +92,11 @@ export function getAdminNavItems(restaurantUuid?: string): AdminNavItem[] {
       href: restaurantUuid ? ROUTES.restaurantMenuItems(restaurantUuid) : undefined,
       disabled: !restaurantUuid,
     },
-    { label: 'QR-коди', disabled: true },
+    {
+      label: 'QR-коди',
+      href: restaurantUuid ? ROUTES.restaurantQrCodes(restaurantUuid) : undefined,
+      disabled: !restaurantUuid,
+    },
     { label: 'Замовлення', disabled: true },
     { label: 'Оплати', disabled: true },
   ];

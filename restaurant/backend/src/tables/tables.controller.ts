@@ -9,6 +9,8 @@ import {
   Patch,
   Post,
   Put,
+  Query,
+  StreamableFile,
   UseGuards,
 } from '@nestjs/common';
 import { CurrentUserId } from 'src/auth/decorators/current-user.decorator';
@@ -17,6 +19,9 @@ import {
   validateResponseDto,
   validateResponseDtoList,
 } from 'src/common/utils/validate-response.util';
+import { TableQrQueryDto } from 'src/qr/dto/qr-query.dto';
+import { TableQrResponseDto } from 'src/qr/dto/qr-response.dto';
+import { toQrHttpResult } from 'src/qr/qr-endpoint.util';
 import {
   CreateTableDto,
   UpdateTableDto,
@@ -39,6 +44,25 @@ export class TablesController {
     return validateResponseDtoList(TableResponseDto, result);
   }
 
+  @Get(':tableUuid/qr')
+  async getQr(
+    @CurrentUserId() userId: number,
+    @Param('restaurantUuid') restaurantUuid: string,
+    @Param('tableUuid') tableUuid: string,
+    @Query() query: TableQrQueryDto,
+  ): Promise<TableQrResponseDto | StreamableFile> {
+    const result = await this.tablesService.getQr(
+      userId,
+      restaurantUuid,
+      tableUuid,
+      query.format,
+    );
+
+    return toQrHttpResult(result, (payload) =>
+      validateResponseDto(TableQrResponseDto, payload),
+    );
+  }
+
   @Get(':tableUuid')
   async findOne(
     @CurrentUserId() userId: number,
@@ -59,11 +83,7 @@ export class TablesController {
     @Param('restaurantUuid') restaurantUuid: string,
     @Body() dto: CreateTableDto,
   ) {
-    const result = await this.tablesService.create(
-      userId,
-      restaurantUuid,
-      dto,
-    );
+    const result = await this.tablesService.create(userId, restaurantUuid, dto);
     return validateResponseDto(TableResponseDto, result);
   }
 

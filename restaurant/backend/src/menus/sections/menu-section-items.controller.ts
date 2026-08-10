@@ -11,7 +11,9 @@ import { MenuSectionItemsService } from './menu-section-items.service';
 )
 @UseGuards(AuthGuard)
 export class MenuSectionItemsController {
-  constructor(private readonly menuSectionItemsService: MenuSectionItemsService) {}
+  constructor(
+    private readonly menuSectionItemsService: MenuSectionItemsService,
+  ) {}
 
   @Get()
   async findAll(

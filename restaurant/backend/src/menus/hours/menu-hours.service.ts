@@ -1,6 +1,4 @@
-import {
-  Injectable,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { validateHoursPayload } from 'src/common/validation/hours-payload.validation';
 import {
   ACL_PERMISSION_READ,
@@ -24,10 +22,7 @@ import type {
   WeeklyDayHours,
   ZonedNow,
 } from './menu-hours.types';
-import {
-  isOverrideHoursRecord,
-  isWeeklyHoursRecord,
-} from './menu-hours.types';
+import { isOverrideHoursRecord, isWeeklyHoursRecord } from './menu-hours.types';
 
 @Injectable()
 export class MenuHoursService {
@@ -69,6 +64,11 @@ export class MenuHoursService {
     await this.menuHoursData.replaceAll(menuId, dto.weekly, dto.overrides);
 
     return this.buildResponse(menuId);
+  }
+
+  async getResolvedToday(menuId: string): Promise<ResolvedDayHours> {
+    const { resolvedToday } = await this.buildResponse(menuId);
+    return resolvedToday;
   }
 
   private async buildResponse(menuId: string): Promise<MenuHoursResponse> {
@@ -118,7 +118,10 @@ export class MenuHoursService {
   }
 
   private groupOverrideRows(rows: HoursRecord[]): HoursOverride[] {
-    const byDate = new Map<string, { isClosed: boolean; intervals: TimeInterval[] }>();
+    const byDate = new Map<
+      string,
+      { isClosed: boolean; intervals: TimeInterval[] }
+    >();
 
     for (const row of rows) {
       const date = formatDateOnly(row.date!);
@@ -165,7 +168,9 @@ export class MenuHoursService {
       };
     }
 
-    const weeklyDay = weekly.find((item) => item.dayOfWeek === target.dayOfWeek);
+    const weeklyDay = weekly.find(
+      (item) => item.dayOfWeek === target.dayOfWeek,
+    );
     const intervals = weeklyDay?.intervals ?? [];
     const isClosed = intervals.length === 0;
 

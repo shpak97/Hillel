@@ -22,7 +22,11 @@ import { ILoginResponse, IAccessTokenResponse } from 'src/types/interfaces';
 import { RefreshAccessTokenRequestDto } from './dto/refresh-access-token-request.dto';
 import { AUTH_ERRORS } from './auth.errors';
 import { JWT_TOKEN_EXPIRATION } from './jwt.config';
-import { AUTH_MESSAGES, buildEmailVerificationHtml, buildPasswordResetHtml } from './auth.messages';
+import {
+  AUTH_MESSAGES,
+  buildEmailVerificationHtml,
+  buildPasswordResetHtml,
+} from './auth.messages';
 
 const RESEND_COOLDOWN_MS = 60_000;
 
@@ -91,7 +95,7 @@ export class AuthService {
             ...meta,
             accessToken,
             refreshToken,
-          } as PrismaJson.UserMeta,
+          },
         },
       );
       return { accessToken, refreshToken };
@@ -170,7 +174,7 @@ export class AuthService {
           meta: {
             ...meta,
             verifyEmailLastSentAt: Date.now(),
-          } as PrismaJson.UserMeta,
+          },
         },
       );
     } catch (error: unknown) {
@@ -198,7 +202,7 @@ export class AuthService {
         meta: {
           ...meta,
           emailVerified: true,
-        } as PrismaJson.UserMeta,
+        },
       },
     );
   }
@@ -249,7 +253,7 @@ export class AuthService {
           meta: {
             ...meta,
             passwordResetLastSentAt: Date.now(),
-          } as PrismaJson.UserMeta,
+          },
         },
       );
     } catch (error: unknown) {
@@ -282,7 +286,7 @@ export class AuthService {
           password: await this.hashPassword(password),
           accessToken: '',
           refreshToken: '',
-        } as PrismaJson.UserMeta,
+        },
       },
     );
   }
@@ -319,7 +323,7 @@ export class AuthService {
           meta: {
             ...meta,
             accessToken,
-          } as PrismaJson.UserMeta,
+          },
         },
       );
       return { accessToken };
@@ -338,7 +342,7 @@ export class AuthService {
         password: await this.hashPassword(registerRequestDto.password),
         accessToken: '',
         emailVerified: false,
-      } as PrismaJson.UserMeta,
+      },
     };
     return await this.usersData.create(data);
   }

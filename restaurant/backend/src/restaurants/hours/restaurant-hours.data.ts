@@ -6,8 +6,14 @@ import {
 } from 'src/common/utils/hours-interval.util';
 import { parseDateOnly } from './time.util';
 import { PrismaService } from '../../prisma.service';
-import type { HoursOverrideDto, WeeklyDayHoursDto } from './dto/update-restaurant-hours.dto';
-import type { HoursRecord, RestaurantTimezoneRow } from './restaurant-hours.types';
+import type {
+  HoursOverrideDto,
+  WeeklyDayHoursDto,
+} from './dto/update-restaurant-hours.dto';
+import type {
+  HoursRecord,
+  RestaurantTimezoneRow,
+} from './restaurant-hours.types';
 
 @Injectable()
 export class RestaurantHoursData {

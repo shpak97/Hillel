@@ -60,6 +60,9 @@ model Restaurant {
   photos           String[]                  @default([])
   timezone         String                    @default("Europe/Kyiv")
   currency         String                    @default("UAH")
+  /// [RestaurantQrStyle]
+  qrStyle          Json?                     @db.JsonB
+  qrLogo           String?
   deactivatedAt    DateTime?
   deletedAt        DateTime?
   ownerId          Int
@@ -71,6 +74,7 @@ model Restaurant {
   ingredients      Ingredient[]
   products         Product[]
   menuItems        MenuItem[]
+  qrCodes          QrCode[]
   @@map("restaurant")
 }
 
@@ -116,6 +120,7 @@ model Menu {
   tableLinks     TableMenu[]
   hours          MenuHours[]
   sections       MenuSection[]
+  qrCodeLinks    QrCodeMenu[]
 
   @@index([restaurantId])
   @@map("menu")
@@ -244,4 +249,32 @@ model MenuHours {
   @@index([menuId, dayOfWeek])
   @@index([menuId, date])
   @@map("menu_hours")
+}
+
+model QrCode {
+  uuid           String       @id @default(uuid())
+  restaurantId   String
+  name           String
+  deactivatedAt  DateTime?
+  deletedAt      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  restaurant     Restaurant   @relation(fields: [restaurantId], references: [uuid], onDelete: Cascade)
+  menus          QrCodeMenu[]
+
+  @@index([restaurantId])
+  @@map("qr_code")
+}
+
+model QrCodeMenu {
+  qrCodeId    String
+  menuId      String
+  selectTable Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  qrCode      QrCode   @relation(fields: [qrCodeId], references: [uuid], onDelete: Cascade)
+  menu        Menu     @relation(fields: [menuId], references: [uuid], onDelete: Cascade)
+
+  @@id([qrCodeId, menuId])
+  @@index([qrCodeId, sortOrder])
+  @@map("qr_code_menu")
 }

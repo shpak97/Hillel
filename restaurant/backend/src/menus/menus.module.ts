@@ -2,6 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { AclModule } from 'src/acl/acl.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { MenuItemsModule } from 'src/menu-items/menu-items.module';
+import { QrModule } from 'src/qr/qr.module';
 import { RestaurantsModule } from 'src/restaurants/restaurants.module';
 import { PrismaService } from '../prisma.service';
 import { MenuHoursData } from './hours/menu-hours.data';
@@ -20,6 +21,7 @@ import { MenuSectionsService } from './sections/menu-sections.service';
   imports: [
     AuthModule,
     AclModule,
+    QrModule,
     MenuItemsModule,
     forwardRef(() => RestaurantsModule),
   ],
@@ -39,6 +41,12 @@ import { MenuSectionsService } from './sections/menu-sections.service';
     MenuSectionItemsData,
     PrismaService,
   ],
-  exports: [MenusService, MenusData],
+  exports: [
+    MenusService,
+    MenusData,
+    MenuSectionsData,
+    MenuSectionItemsData,
+    MenuHoursService,
+  ],
 })
 export class MenusModule {}

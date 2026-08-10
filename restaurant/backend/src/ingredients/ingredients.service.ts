@@ -5,16 +5,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Ingredient } from '@prisma/client';
-import { ACL_PERMISSION_READ, ACL_PERMISSION_WRITE } from 'src/acl/acl.constants';
+import {
+  ACL_PERMISSION_READ,
+  ACL_PERMISSION_WRITE,
+} from 'src/acl/acl.constants';
 import {
   activeStateFromFlag,
   isEntityActive,
 } from 'src/common/utils/entity-active.util';
 import { RestaurantsService } from 'src/restaurants/restaurants.service';
-import {
-  CreateIngredientDto,
-  UpdateIngredientDto,
-} from './dto/ingredient.dto';
+import { CreateIngredientDto, UpdateIngredientDto } from './dto/ingredient.dto';
 import { IngredientsData } from './ingredients.data';
 import { INGREDIENTS_ERRORS } from './ingredients.errors';
 
@@ -37,7 +37,11 @@ export class IngredientsService {
     userId: number,
     restaurantId: string,
   ): Promise<IngredientResponse[]> {
-    await this.assertRestaurantAccess(userId, restaurantId, ACL_PERMISSION_READ);
+    await this.assertRestaurantAccess(
+      userId,
+      restaurantId,
+      ACL_PERMISSION_READ,
+    );
     const ingredients =
       await this.ingredientsData.findManyByRestaurant(restaurantId);
     return ingredients.map((ingredient) => this.toResponse(ingredient));
@@ -62,7 +66,11 @@ export class IngredientsService {
     restaurantId: string,
     dto: CreateIngredientDto,
   ): Promise<IngredientResponse> {
-    await this.assertRestaurantAccess(userId, restaurantId, ACL_PERMISSION_WRITE);
+    await this.assertRestaurantAccess(
+      userId,
+      restaurantId,
+      ACL_PERMISSION_WRITE,
+    );
 
     try {
       const ingredient = await this.ingredientsData.create({
@@ -136,7 +144,11 @@ export class IngredientsService {
     restaurantId: string,
     permission: typeof ACL_PERMISSION_READ | typeof ACL_PERMISSION_WRITE,
   ): Promise<void> {
-    await this.restaurantsService.assertAccess(userId, restaurantId, permission);
+    await this.restaurantsService.assertAccess(
+      userId,
+      restaurantId,
+      permission,
+    );
   }
 
   private async getAccessibleIngredient(

@@ -15,7 +15,18 @@ export function isMultipartRequest(req: Pick<Request, 'headers'>): boolean {
 
 function formatValidationErrors(errors: ValidationError[]): string {
   return errors
-    .flatMap((error) => Object.values(error.constraints ?? {}))
+    .flatMap((error) => {
+      const own = Object.values(error.constraints ?? {});
+      if (own.length > 0) {
+        return own;
+      }
+      if (error.children?.length) {
+        const nested = formatValidationErrors(error.children);
+        return nested ? [`${error.property}: ${nested}`] : [];
+      }
+      return [];
+    })
+    .filter(Boolean)
     .join('; ');
 }
 
