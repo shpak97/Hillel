@@ -1,6 +1,20 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  HttpCode,
+  Param,
+  Post,
+  Req,
+} from '@nestjs/common';
 import { validateResponseDto } from 'src/common/utils/validate-response.util';
 import { GuestMenuResponseDto } from './dto/guest-menu-response.dto';
+import {
+  CreateGuestOrderDto,
+  GuestOrderResponseDto,
+  GuestOrderStatusResponseDto,
+} from './dto/guest-order.dto';
 import { GuestQrResponseDto } from './dto/guest-qr-response.dto';
 import { GuestRestaurantResponseDto } from './dto/guest-restaurant-response.dto';
 import { GuestTableResponseDto } from './dto/guest-table-response.dto';
@@ -41,5 +55,37 @@ export class GuestController {
       tableUuid,
     );
     return validateResponseDto(GuestTableResponseDto, result);
+  }
+
+  @Post('r/:slug/orders')
+  async createOrder(
+    @Param('slug') slug: string,
+    @Body() dto: CreateGuestOrderDto,
+  ) {
+    const result = await this.guestService.createOrderCheckout(slug, dto);
+    return validateResponseDto(GuestOrderResponseDto, result);
+  }
+
+  @Get('r/:slug/orders/:orderUuid')
+  async getOrder(
+    @Param('slug') slug: string,
+    @Param('orderUuid') orderUuid: string,
+  ) {
+    const result = await this.guestService.getOrderStatus(slug, orderUuid);
+    return validateResponseDto(GuestOrderStatusResponseDto, result);
+  }
+
+  @Post('payments/monobank/webhook')
+  @HttpCode(200)
+  async monobankWebhook(
+    @Req() req: { rawBody?: Buffer },
+    @Headers('x-sign') xSign: string | undefined,
+  ) {
+    const rawBody = req.rawBody;
+    if (!rawBody) {
+      return { ok: true };
+    }
+
+    return this.guestService.handleMonobankWebhook(rawBody, xSign);
   }
 }

@@ -12,6 +12,7 @@ import { ProductsModule } from './products/products.module';
 import { MenuItemsModule } from './menu-items/menu-items.module';
 import { QrCodesModule } from './qr-codes/qr-codes.module';
 import { GuestModule } from './guest/guest.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { GuestModule } from './guest/guest.module';
     MenuItemsModule,
     QrCodesModule,
     GuestModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

@@ -1,7 +1,11 @@
 'use client';
 
+import { useParams } from 'next/navigation';
+import { useState } from 'react';
 import { useCart } from '@/features/guest/context/CartContext';
 import { getRestaurantPhotoUrl } from '@/features/restaurant/lib/photo-url';
+import { parseApiError } from '@/shared/api/error-message';
+import { API_URL } from '@/shared/config/env';
 import { formatMoney } from '@/shared/lib/format-money';
 import type { SupportedCurrency } from '@/shared/model/currency';
 
@@ -10,8 +14,61 @@ type CartDrawerProps = {
   onClose: () => void;
 };
 
+type CheckoutResponse = {
+  orderUuid: string;
+  pageUrl: string;
+};
+
 export function CartDrawer({ currency, onClose }: CartDrawerProps) {
+  const params = useParams<{ slug: string }>();
+  const slug = params.slug;
   const { items, totalPrice, setQuantity, clear } = useCart();
+  const [isPaying, setIsPaying] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handlePay() {
+    if (!slug || items.length === 0 || isPaying) {
+      return;
+    }
+
+    setIsPaying(true);
+    setError('');
+
+    try {
+      const response = await fetch(
+        `${API_URL}/guest/r/${encodeURIComponent(slug)}/orders`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: items.map((item) => ({
+              menuItemId: item.menuItemId,
+              quantity: item.quantity,
+            })),
+          }),
+        },
+      );
+
+      const body: unknown = await response.json().catch(() => undefined);
+      if (!response.ok) {
+        setError(parseApiError(body, 'Не вдалося створити оплату').message);
+        return;
+      }
+
+      const data = body as CheckoutResponse;
+      if (!data.pageUrl) {
+        setError('Не отримано посилання на оплату');
+        return;
+      }
+
+      // Keep cart until payment result page confirms success.
+      window.location.assign(data.pageUrl);
+    } catch {
+      setError('Не вдалося створити оплату');
+    } finally {
+      setIsPaying(false);
+    }
+  }
 
   return (
     <div
@@ -33,9 +90,14 @@ export function CartDrawer({ currency, onClose }: CartDrawerProps) {
           </button>
         </div>
         <p className="mt-2 text-sm font-semibold text-ink-500">
-          Це попередній список без оформлення — надсилання замовлення скоро
-          зʼявиться.
+          Перевірте замовлення і перейдіть до оплати через monobank.
         </p>
+
+        {error ? (
+          <p className="mt-4 rounded-field border border-danger/20 bg-danger-50 px-4 py-3 text-sm font-bold text-danger">
+            {error}
+          </p>
+        ) : null}
 
         {items.length === 0 ? (
           <p className="mt-6 rounded-field border border-dashed border-line bg-paper-50 px-4 py-3 text-sm font-bold text-ink-700">
@@ -49,6 +111,7 @@ export function CartDrawer({ currency, onClose }: CartDrawerProps) {
                 className="flex items-center gap-3 rounded-[18px] border border-line p-3"
               >
                 {item.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={getRestaurantPhotoUrl(item.photo)}
                     alt={item.name}
@@ -103,13 +166,24 @@ export function CartDrawer({ currency, onClose }: CartDrawerProps) {
         </div>
 
         {items.length > 0 ? (
-          <button
-            type="button"
-            onClick={clear}
-            className="mt-4 w-full rounded-field border border-line px-4 py-3 text-sm font-extrabold text-ink-700"
-          >
-            Очистити кошик
-          </button>
+          <div className="mt-4 grid gap-3">
+            <button
+              type="button"
+              disabled={isPaying}
+              onClick={() => void handlePay()}
+              className="w-full rounded-field bg-ink-950 px-4 py-3.5 text-sm font-extrabold text-white disabled:opacity-60"
+            >
+              {isPaying ? 'Створюємо оплату…' : 'Оплатити'}
+            </button>
+            <button
+              type="button"
+              disabled={isPaying}
+              onClick={clear}
+              className="w-full rounded-field border border-line px-4 py-3 text-sm font-extrabold text-ink-700 disabled:opacity-60"
+            >
+              Очистити кошик
+            </button>
+          </div>
         ) : null}
       </div>
     </div>

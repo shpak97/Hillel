@@ -59,6 +59,24 @@ export class MenuItemsData {
     });
   }
 
+  findManyByUuidsWithProducts(
+    uuids: string[],
+  ): Promise<MenuItemWithProducts[]> {
+    if (uuids.length === 0) {
+      return Promise.resolve([]);
+    }
+
+    return this.prisma.menuItem.findMany({
+      where: { uuid: { in: uuids }, deletedAt: null },
+      include: {
+        products: {
+          orderBy: { sortOrder: 'asc' },
+          include: { product: true },
+        },
+      },
+    });
+  }
+
   create(data: Prisma.MenuItemCreateInput): Promise<MenuItem> {
     return this.prisma.menuItem.create({ data });
   }

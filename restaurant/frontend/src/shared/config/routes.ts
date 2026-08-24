@@ -33,10 +33,15 @@ export const ROUTES = {
   restaurantQrCodeNew: (uuid: string) => `/restaurants/${uuid}/qr-codes/new`,
   restaurantQrCodeEdit: (restaurantUuid: string, qrCodeUuid: string) =>
     `/restaurants/${restaurantUuid}/qr-codes/${qrCodeUuid}/edit`,
+  restaurantOrders: (uuid: string) => `/restaurants/${uuid}/orders`,
+  restaurantPayments: (uuid: string) => `/restaurants/${uuid}/payments`,
+  guestRestaurant: (slug: string) => `/r/${slug}`,
   guestMenu: (slug: string, menuUuid: string, selectTable = false) =>
     `/r/${slug}/m/${menuUuid}?selectTable=${selectTable ? '1' : '0'}`,
   guestTable: (slug: string, tableUuid: string) => `/r/${slug}/t/${tableUuid}`,
   guestQr: (slug: string, qrUuid: string) => `/r/${slug}/q/${qrUuid}`,
+  guestOrderResult: (slug: string, orderUuid: string) =>
+    `/r/${slug}/orders/${orderUuid}/result`,
 } as const;
 
 export const PUBLIC_ROUTES: string[] = [
@@ -97,8 +102,18 @@ export function getAdminNavItems(restaurantUuid?: string): AdminNavItem[] {
       href: restaurantUuid ? ROUTES.restaurantQrCodes(restaurantUuid) : undefined,
       disabled: !restaurantUuid,
     },
-    { label: 'Замовлення', disabled: true },
-    { label: 'Оплати', disabled: true },
+    {
+      label: 'Замовлення',
+      href: restaurantUuid ? ROUTES.restaurantOrders(restaurantUuid) : undefined,
+      disabled: !restaurantUuid,
+    },
+    {
+      label: 'Оплати',
+      href: restaurantUuid
+        ? ROUTES.restaurantPayments(restaurantUuid)
+        : undefined,
+      disabled: !restaurantUuid,
+    },
   ];
 }
 

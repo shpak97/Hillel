@@ -9,7 +9,9 @@ import { ensureAllImageUploadDirs } from './uploads/image-upload';
 async function bootstrap() {
   ensureAllImageUploadDirs();
 
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+  });
   const frontendOrigin = (
     process.env.FRONTEND_PUBLIC_URL ?? 'http://localhost:3100'
   ).replace(/\/$/, '');
