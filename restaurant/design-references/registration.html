@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RestoQR - Реєстрація</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+        --color-ink-950: #171512;
+        --color-ink-800: #34302a;
+        --color-ink-600: #676057;
+        --color-ink-500: #817970;
+        --color-ink-400: #9a9188;
+        --color-paper-50: #fbfaf7;
+        --color-paper-100: #f4f0e8;
+        --color-paper-200: #e8dfd2;
+        --color-card: #ffffff;
+        --color-line: #e5ded3;
+        --color-brand: #e9502f;
+        --color-brand-700: #c83d22;
+        --color-brand-50: #fff1ec;
+        --color-herb: #28795d;
+        --color-herb-700: #1f604a;
+        --color-herb-50: #eaf7f0;
+        --color-saffron: #f2ad2e;
+        --color-mint: #46b38d;
+
+        --radius-field: 18px;
+        --radius-panel: 30px;
+        --radius-pill: 999px;
+      }
+
+      @layer base {
+        body {
+          background:
+            linear-gradient(135deg, rgba(40, 121, 93, 0.1), transparent 34%),
+            radial-gradient(circle at 84% 20%, rgba(233, 80, 47, 0.1), transparent 32%),
+            #fbfaf7;
+          color: var(--color-ink-950);
+        }
+
+        input:-webkit-autofill {
+          -webkit-box-shadow: 0 0 0 1000px white inset;
+          -webkit-text-fill-color: var(--color-ink-950);
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen font-sans antialiased">
+    <main class="mx-auto grid min-h-screen w-full max-w-7xl grid-cols-1 px-5 py-5 lg:grid-cols-[0.94fr_1.06fr] lg:px-8">
+      <section class="flex min-h-[calc(100vh-40px)] flex-col rounded-[32px] bg-card/92 p-5 shadow-[0_30px_90px_-52px_rgba(23,21,18,0.65)] ring-1 ring-line/80 sm:p-7 lg:p-8">
+        <header class="flex items-center justify-between gap-4">
+          <a href="index.html" class="group inline-flex items-center gap-3 rounded-pill focus:outline-none focus:ring-4 focus:ring-brand/20">
+            <span class="grid size-11 place-items-center rounded-2xl bg-ink-950 text-[17px] font-black text-white shadow-[0_16px_34px_-22px_rgba(23,21,18,0.9)]">RQ</span>
+            <span>
+              <span class="block text-[15px] font-bold leading-tight text-ink-950">RestoQR</span>
+              <span class="block text-[12px] font-medium leading-tight text-ink-400">Owner console</span>
+            </span>
+          </a>
+
+          <nav class="hidden items-center gap-2 rounded-pill border border-line bg-paper-50 p-1 text-sm font-semibold text-ink-600 sm:flex">
+            <a href="login.html" class="rounded-pill px-4 py-2 transition hover:bg-white hover:text-ink-950">Вхід</a>
+            <a href="registration.html" class="rounded-pill bg-white px-4 py-2 text-ink-950 shadow-sm">Реєстрація</a>
+          </nav>
+        </header>
+
+        <div class="flex flex-1 items-center justify-center py-12 sm:py-16">
+          <div class="w-full max-w-[430px]">
+            <div class="mb-8">
+              <p class="mb-3 inline-flex items-center rounded-pill bg-herb-50 px-3 py-1 text-[13px] font-bold text-herb ring-1 ring-herb/10">Новий ресторан</p>
+              <h1 class="text-[34px] font-black leading-[1.05] tracking-normal text-ink-950 sm:text-[42px]">Створіть акаунт</h1>
+              <p class="mt-4 max-w-sm text-[16px] leading-7 text-ink-600">Після реєстрації ми надішлемо лист для підтвердження email.</p>
+            </div>
+
+            <form action="registration-email-sent.html" class="space-y-5">
+              <div>
+                <label for="email" class="mb-2 block text-sm font-bold text-ink-800">Email</label>
+                <input id="email" name="email" type="email" autocomplete="email" placeholder="owner@restaurant.ua" class="h-14 w-full rounded-field border border-line bg-white px-4 text-[16px] font-medium text-ink-950 outline-none transition placeholder:text-ink-400 hover:border-paper-200 focus:border-brand focus:ring-4 focus:ring-brand/15" />
+              </div>
+
+              <div>
+                <label for="password" class="mb-2 block text-sm font-bold text-ink-800">Пароль</label>
+                <input id="password" name="password" type="password" autocomplete="new-password" placeholder="8-20 символів" class="h-14 w-full rounded-field border border-line bg-white px-4 text-[16px] font-medium text-ink-950 outline-none transition placeholder:text-ink-400 hover:border-paper-200 focus:border-brand focus:ring-4 focus:ring-brand/15" />
+                <p class="mt-2 text-[13px] font-semibold leading-5 text-ink-500">Латинські літери верхнього та нижнього регістру і хоча б одна цифра.</p>
+              </div>
+
+              <button type="submit" class="h-14 w-full rounded-field bg-ink-950 px-5 text-[16px] font-extrabold text-white shadow-[0_18px_38px_-22px_rgba(23,21,18,0.95)] transition hover:-translate-y-0.5 hover:bg-herb focus:outline-none focus:ring-4 focus:ring-herb/20">Зареєструватися</button>
+            </form>
+
+            <div class="mt-5 flex items-center justify-center gap-2 text-[14px] font-bold">
+              <a href="registration-validation.html" class="rounded-pill border border-line px-4 py-2 text-ink-600 transition hover:border-brand/30 hover:bg-brand-50 hover:text-brand-700">Стан помилки</a>
+              <a href="registration-email-sent.html" class="rounded-pill border border-line px-4 py-2 text-ink-600 transition hover:border-herb/30 hover:bg-herb-50 hover:text-herb">Email sent</a>
+            </div>
+
+            <p class="mt-7 text-center text-[15px] font-medium text-ink-500">
+              Вже є акаунт?
+              <a href="login.html" class="font-extrabold text-ink-950 underline-offset-4 hover:underline">Увійти</a>
+            </p>
+          </div>
+        </div>
+
+        <footer class="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5 text-[13px] font-semibold text-ink-500">
+          <a href="index.html" class="rounded-pill px-3 py-2 hover:bg-paper-50 hover:text-ink-950">Design system</a>
+          <span>v0.1 auth references</span>
+        </footer>
+      </section>
+
+      <aside class="hidden min-h-[calc(100vh-40px)] items-center justify-center px-8 lg:flex">
+        <div class="w-full max-w-[540px]">
+          <div class="mb-8 flex items-center justify-between">
+            <div>
+              <p class="text-sm font-black uppercase tracking-[0.16em] text-brand-700">Setup</p>
+              <h2 class="mt-2 text-3xl font-black leading-tight text-ink-950">Перший акаунт власника прив'язує ресторан до QR-меню.</h2>
+            </div>
+            <span class="rounded-pill bg-brand-50 px-4 py-2 text-sm font-black text-brand-700 ring-1 ring-brand/10">Step 1</span>
+          </div>
+
+          <div class="rounded-[34px] bg-white p-5 shadow-[0_34px_90px_-55px_rgba(23,21,18,0.85)] ring-1 ring-line">
+            <div class="rounded-[28px] bg-paper-50 p-5 ring-1 ring-line/60">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="text-[13px] font-bold text-ink-400">Restaurant profile</p>
+                  <h3 class="mt-1 text-2xl font-black text-ink-950">Bistro 21</h3>
+                </div>
+                <div class="grid size-16 place-items-center rounded-3xl bg-ink-950 text-[22px] font-black text-white">21</div>
+              </div>
+
+              <div class="mt-5 grid gap-3">
+                <div class="rounded-3xl bg-white p-4 ring-1 ring-line">
+                  <div class="flex items-center justify-between gap-3">
+                    <p class="text-sm font-black text-ink-950">1. Створити акаунт</p>
+                    <span class="rounded-pill bg-herb-50 px-3 py-1 text-xs font-black text-herb">активно</span>
+                  </div>
+                  <div class="mt-3 h-2 rounded-pill bg-paper-100">
+                    <div class="h-2 w-1/2 rounded-pill bg-herb"></div>
+                  </div>
+                </div>
+
+                <div class="rounded-3xl bg-white p-4 ring-1 ring-line">
+                  <div class="flex items-center justify-between gap-3">
+                    <p class="text-sm font-black text-ink-950">2. Підтвердити email</p>
+                    <span class="rounded-pill bg-paper-100 px-3 py-1 text-xs font-black text-ink-500">очікує</span>
+                  </div>
+                </div>
+
+                <div class="rounded-3xl bg-white p-4 ring-1 ring-line">
+                  <div class="flex items-center justify-between gap-3">
+                    <p class="text-sm font-black text-ink-950">3. Додати меню</p>
+                    <span class="rounded-pill bg-paper-100 px-3 py-1 text-xs font-black text-ink-500">далі</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 rounded-[30px] bg-ink-950 p-5 text-white shadow-[0_24px_70px_-48px_rgba(23,21,18,0.9)]">
+            <p class="text-sm font-bold text-white/60">Після входу</p>
+            <p class="mt-1 text-xl font-black">Меню, столи, замовлення та оплати зібрані в одному кабінеті.</p>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </body>
+</html>

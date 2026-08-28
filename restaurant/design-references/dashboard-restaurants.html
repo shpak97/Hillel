@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RestoQR - Список ресторанів</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+        --color-ink-950: #171512;
+        --color-ink-800: #34302a;
+        --color-ink-600: #676057;
+        --color-ink-500: #817970;
+        --color-ink-400: #9a9188;
+        --color-paper-50: #fbfaf7;
+        --color-paper-100: #f4f0e8;
+        --color-paper-200: #e8dfd2;
+        --color-card: #ffffff;
+        --color-line: #e5ded3;
+        --color-brand: #e9502f;
+        --color-brand-700: #c83d22;
+        --color-brand-50: #fff1ec;
+        --color-herb: #28795d;
+        --color-herb-700: #1f604a;
+        --color-herb-50: #eaf7f0;
+        --color-saffron: #f2ad2e;
+        --color-mint: #46b38d;
+        --color-danger: #d92d20;
+        --color-danger-50: #fff0ed;
+
+        --radius-field: 18px;
+        --radius-panel: 30px;
+        --radius-pill: 999px;
+      }
+
+      @layer base {
+        body {
+          background: #fbfaf7;
+          color: var(--color-ink-950);
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen font-sans antialiased">
+    <div class="min-h-screen lg:grid lg:grid-cols-[268px_1fr]">
+      <aside class="hidden border-r border-line bg-card lg:flex lg:min-h-screen lg:flex-col">
+        <div class="flex h-20 items-center gap-3 border-b border-line px-6">
+          <a href="index.html" class="grid size-11 place-items-center rounded-2xl bg-ink-950 text-[17px] font-black text-white">RQ</a>
+          <div>
+            <p class="text-[15px] font-black leading-tight text-ink-950">RestoQR</p>
+            <p class="text-[12px] font-semibold leading-tight text-ink-400">Admin console</p>
+          </div>
+        </div>
+
+        <nav class="flex flex-1 flex-col gap-1 px-3 py-5 text-[14px] font-bold text-ink-600">
+          <a href="dashboard-restaurants.html" class="rounded-2xl bg-paper-100 px-4 py-3 text-ink-950">Дашборд</a>
+          <a href="dashboard-restaurants.html" class="rounded-2xl bg-brand-50 px-4 py-3 text-brand-700">Ресторани</a>
+          <a href="#" class="rounded-2xl px-4 py-3 transition hover:bg-paper-50 hover:text-ink-950">Меню</a>
+          <a href="#" class="rounded-2xl px-4 py-3 transition hover:bg-paper-50 hover:text-ink-950">QR-коди</a>
+          <a href="#" class="rounded-2xl px-4 py-3 transition hover:bg-paper-50 hover:text-ink-950">Замовлення</a>
+          <a href="#" class="rounded-2xl px-4 py-3 transition hover:bg-paper-50 hover:text-ink-950">Оплати</a>
+        </nav>
+
+        <div class="border-t border-line p-4">
+          <a href="dashboard-empty.html" class="block rounded-[24px] bg-paper-50 p-4 text-sm font-bold leading-5 text-ink-600 ring-1 ring-line transition hover:bg-white hover:text-ink-950">Переглянути порожній стан</a>
+        </div>
+      </aside>
+
+      <section class="min-w-0">
+        <header class="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-line bg-paper-50/90 px-5 backdrop-blur-xl lg:px-8">
+          <div class="flex min-w-0 items-center gap-3">
+            <a href="index.html" class="grid size-10 place-items-center rounded-2xl bg-ink-950 text-[15px] font-black text-white lg:hidden">RQ</a>
+            <div class="min-w-0">
+              <p class="text-[13px] font-black uppercase tracking-[0.14em] text-ink-400">Admin</p>
+              <h1 class="truncate text-2xl font-black text-ink-950">Ресторани</h1>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <a href="restaurant-create.html" class="hidden rounded-pill bg-ink-950 px-4 py-2 text-sm font-extrabold text-white transition hover:bg-brand-700 sm:inline-flex">Створити ресторан</a>
+            <div class="grid size-10 place-items-center rounded-2xl bg-white text-sm font-black text-ink-950 ring-1 ring-line">OR</div>
+          </div>
+        </header>
+
+        <main class="mx-auto max-w-6xl px-5 py-6 lg:px-8 lg:py-8">
+          <div class="mb-6 grid gap-3 sm:grid-cols-3">
+            <div class="rounded-[24px] bg-card p-4 ring-1 ring-line">
+              <p class="text-[12px] font-black uppercase tracking-[0.12em] text-ink-400">Ресторани</p>
+              <p class="mt-2 text-3xl font-black text-ink-950">3</p>
+            </div>
+            <div class="rounded-[24px] bg-card p-4 ring-1 ring-line">
+              <p class="text-[12px] font-black uppercase tracking-[0.12em] text-ink-400">Активні столи</p>
+              <p class="mt-2 text-3xl font-black text-ink-950">42</p>
+            </div>
+            <div class="rounded-[24px] bg-card p-4 ring-1 ring-line">
+              <p class="text-[12px] font-black uppercase tracking-[0.12em] text-ink-400">Замовлень сьогодні</p>
+              <p class="mt-2 text-3xl font-black text-ink-950">128</p>
+            </div>
+          </div>
+
+          <section class="rounded-[30px] bg-card shadow-[0_24px_70px_-55px_rgba(23,21,18,0.75)] ring-1 ring-line">
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-line p-5 sm:p-6">
+              <div>
+                <p class="text-sm font-black uppercase tracking-[0.16em] text-brand-700">Restaurant list</p>
+                <h2 class="mt-2 text-3xl font-black text-ink-950">Оберіть ресторан</h2>
+              </div>
+              <a href="restaurant-create.html" class="inline-flex h-12 items-center justify-center rounded-field border border-line bg-white px-5 text-sm font-extrabold text-ink-950 transition hover:bg-paper-50">Додати ще</a>
+            </div>
+
+            <div class="divide-y divide-line">
+              <article class="grid gap-4 p-5 transition hover:bg-paper-50/70 sm:grid-cols-[1fr_auto] sm:items-center sm:p-6">
+                <div class="flex min-w-0 gap-4">
+                  <div class="grid size-14 shrink-0 place-items-center rounded-3xl bg-ink-950 text-lg font-black text-white">21</div>
+                  <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <h3 class="text-xl font-black text-ink-950">Bistro 21</h3>
+                      <span class="rounded-pill bg-herb-50 px-3 py-1 text-xs font-black text-herb">активний</span>
+                    </div>
+                    <p class="mt-2 text-sm font-semibold leading-6 text-ink-500">Львів · 16 столів · 82 позиції меню · 54 замовлення сьогодні</p>
+                  </div>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <a href="#" class="inline-flex h-12 items-center justify-center rounded-field bg-ink-950 px-5 text-sm font-extrabold text-white transition hover:bg-brand-700">Увійти</a>
+                  <a href="restaurant-edit.html" class="inline-flex h-12 items-center justify-center rounded-field border border-line bg-white px-5 text-sm font-extrabold text-ink-950 transition hover:bg-paper-50">Редагувати</a>
+                </div>
+              </article>
+
+              <article class="grid gap-4 p-5 transition hover:bg-paper-50/70 sm:grid-cols-[1fr_auto] sm:items-center sm:p-6">
+                <div class="flex min-w-0 gap-4">
+                  <div class="grid size-14 shrink-0 place-items-center rounded-3xl bg-brand text-lg font-black text-white">DV</div>
+                  <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <h3 class="text-xl font-black text-ink-950">Dvorik Cafe</h3>
+                      <span class="rounded-pill bg-brand-50 px-3 py-1 text-xs font-black text-brand-700">налаштування</span>
+                    </div>
+                    <p class="mt-2 text-sm font-semibold leading-6 text-ink-500">Київ · 10 столів · 38 позицій меню · 19 замовлень сьогодні</p>
+                  </div>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <a href="#" class="inline-flex h-12 items-center justify-center rounded-field bg-ink-950 px-5 text-sm font-extrabold text-white transition hover:bg-brand-700">Увійти</a>
+                  <a href="restaurant-edit.html" class="inline-flex h-12 items-center justify-center rounded-field border border-line bg-white px-5 text-sm font-extrabold text-ink-950 transition hover:bg-paper-50">Редагувати</a>
+                </div>
+              </article>
+
+              <article class="grid gap-4 p-5 transition hover:bg-paper-50/70 sm:grid-cols-[1fr_auto] sm:items-center sm:p-6">
+                <div class="flex min-w-0 gap-4">
+                  <div class="grid size-14 shrink-0 place-items-center rounded-3xl bg-saffron text-lg font-black text-ink-950">ST</div>
+                  <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <h3 class="text-xl font-black text-ink-950">Street Tacos</h3>
+                      <span class="rounded-pill bg-paper-100 px-3 py-1 text-xs font-black text-ink-500">чернетка</span>
+                    </div>
+                    <p class="mt-2 text-sm font-semibold leading-6 text-ink-500">Одеса · 16 столів · меню ще не опубліковане</p>
+                  </div>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <a href="#" class="inline-flex h-12 items-center justify-center rounded-field bg-ink-950 px-5 text-sm font-extrabold text-white transition hover:bg-brand-700">Увійти</a>
+                  <a href="restaurant-edit.html" class="inline-flex h-12 items-center justify-center rounded-field border border-line bg-white px-5 text-sm font-extrabold text-ink-950 transition hover:bg-paper-50">Редагувати</a>
+                </div>
+              </article>
+            </div>
+          </section>
+        </main>
+      </section>
+    </div>
+  </body>
+</html>

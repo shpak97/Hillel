@@ -1,0 +1,329 @@
+// Prisma schema — add models here
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator json {
+  provider = "prisma-json-types-generator"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MeasureUnit {
+  G
+  KG
+  ML
+  L
+  PCS
+  PORTION
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+model User {
+  id            Int          @id @default(autoincrement())
+  email         String       @unique
+  phone         String?
+  fullname      String?
+  /// [UserMeta]
+  meta          Json?        @db.JsonB
+  isActive      Boolean      @default(true)
+  deactivatedAt DateTime?
+  restaurants   Restaurant[]
+  acls          Acl[]
+  @@map("user")
+}
+
+model Acl {
+  id           Int        @id @default(autoincrement())
+  userId       Int
+  restaurantId String
+  resource     String
+  resourceId   String     @default("*")
+  permission   String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [uuid], onDelete: Cascade)
+
+  @@unique([userId, restaurantId, resource, resourceId, permission])
+  @@index([userId])
+  @@index([restaurantId])
+  @@map("acl")
+}
+
+model Restaurant {
+  uuid             String                    @id @default(uuid())
+  slug             String                    @unique
+  title            String
+  description      String
+  address          String?
+  photos           String[]                  @default([])
+  timezone         String                    @default("Europe/Kyiv")
+  currency         String                    @default("UAH")
+  /// [RestaurantQrStyle]
+  qrStyle          Json?                     @db.JsonB
+  qrLogo           String?
+  deactivatedAt    DateTime?
+  deletedAt        DateTime?
+  ownerId          Int
+  owner            User                      @relation(fields: [ownerId], references: [id])
+  acls             Acl[]
+  hours            RestaurantHours[]
+  tables           Table[]
+  menus            Menu[]
+  ingredients      Ingredient[]
+  products         Product[]
+  menuItems        MenuItem[]
+  qrCodes          QrCode[]
+  orders           Order[]
+  @@map("restaurant")
+}
+
+model RestaurantHours {
+  id           Int        @id @default(autoincrement())
+  restaurantId String
+  dayOfWeek    Int?
+  date         DateTime?  @db.Date
+  opensAt      String
+  closesAt     String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [uuid], onDelete: Cascade)
+
+  @@index([restaurantId, dayOfWeek])
+  @@index([restaurantId, date])
+  @@map("restaurant_hours")
+}
+
+model Table {
+  uuid           String     @id @default(uuid())
+  restaurantId   String
+  label          String
+  zone           String
+  seats          Int
+  deactivatedAt  DateTime?
+  deletedAt      DateTime?
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [uuid], onDelete: Cascade)
+  menuLinks    TableMenu[]
+  orders       Order[]
+
+  @@unique([restaurantId, label])
+  @@index([restaurantId])
+  @@map("restaurant_table")
+}
+
+model Menu {
+  uuid           String              @id @default(uuid())
+  restaurantId   String
+  name           String
+  description    String?
+  photo          String?
+  deactivatedAt  DateTime?
+  deletedAt      DateTime?
+  restaurant     Restaurant          @relation(fields: [restaurantId], references: [uuid], onDelete: Cascade)
+  tableLinks     TableMenu[]
+  hours          MenuHours[]
+  sections       MenuSection[]
+  qrCodeLinks    QrCodeMenu[]
+
+  @@index([restaurantId])
+  @@map("menu")
+}
+
+model Ingredient {
+  uuid           String                @id @default(uuid())
+  restaurantId   String
+  name           String
+  baseUnit       MeasureUnit
+  deactivatedAt  DateTime?
+  deletedAt      DateTime?
+  restaurant     Restaurant            @relation(fields: [restaurantId], references: [uuid], onDelete: Cascade)
+  productLinks   ProductIngredient[]
+
+  @@index([restaurantId])
+  @@map("ingredient")
+}
+
+model Product {
+  uuid           String              @id @default(uuid())
+  restaurantId   String
+  name           String
+  description    String?
+  photo          String?
+  baseUnit       MeasureUnit
+  basePrice      Decimal             @db.Decimal(10, 2)
+  deactivatedAt  DateTime?
+  deletedAt      DateTime?
+  restaurant     Restaurant          @relation(fields: [restaurantId], references: [uuid], onDelete: Cascade)
+  ingredients    ProductIngredient[]
+  menuItemLinks  MenuItemProduct[]
+
+  @@index([restaurantId])
+  @@map("product")
+}
+
+model ProductIngredient {
+  productId    String
+  ingredientId String
+  quantity     Decimal     @db.Decimal(12, 3)
+  unit         MeasureUnit
+  product      Product     @relation(fields: [productId], references: [uuid], onDelete: Cascade)
+  ingredient   Ingredient  @relation(fields: [ingredientId], references: [uuid], onDelete: Cascade)
+
+  @@id([productId, ingredientId])
+  @@map("product_ingredient")
+}
+
+model MenuSection {
+  uuid           String     @id @default(uuid())
+  menuId         String
+  name           String
+  sortOrder      Int        @default(0)
+  deactivatedAt  DateTime?
+  deletedAt      DateTime?
+  menu           Menu       @relation(fields: [menuId], references: [uuid], onDelete: Cascade)
+  itemLinks      MenuSectionItem[]
+
+  @@index([menuId, sortOrder])
+  @@map("menu_section")
+}
+
+model MenuItem {
+  uuid           String            @id @default(uuid())
+  restaurantId   String
+  name           String
+  description    String?
+  photo          String?
+  priceOverride  Decimal?          @db.Decimal(10, 2)
+  deactivatedAt  DateTime?
+  deletedAt      DateTime?
+  restaurant     Restaurant        @relation(fields: [restaurantId], references: [uuid], onDelete: Cascade)
+  products       MenuItemProduct[]
+  sectionLinks   MenuSectionItem[]
+  orderItems     OrderItem[]
+
+  @@index([restaurantId])
+  @@map("menu_item")
+}
+
+model MenuSectionItem {
+  sectionId   String
+  menuItemId  String
+  sortOrder   Int         @default(0)
+  section     MenuSection @relation(fields: [sectionId], references: [uuid], onDelete: Cascade)
+  menuItem    MenuItem    @relation(fields: [menuItemId], references: [uuid], onDelete: Cascade)
+
+  @@id([sectionId, menuItemId])
+  @@index([sectionId, sortOrder])
+  @@map("menu_section_item")
+}
+
+model MenuItemProduct {
+  menuItemId    String
+  productId     String
+  sortOrder     Int       @default(0)
+  quantity      Decimal   @default(1) @db.Decimal(10, 3)
+  priceOverride Decimal?  @db.Decimal(10, 2)
+  menuItem      MenuItem  @relation(fields: [menuItemId], references: [uuid], onDelete: Cascade)
+  product       Product   @relation(fields: [productId], references: [uuid], onDelete: Cascade)
+
+  @@id([menuItemId, productId])
+  @@map("menu_item_product")
+}
+
+model TableMenu {
+  tableId   String
+  menuId    String
+  sortOrder Int    @default(0)
+  table     Table  @relation(fields: [tableId], references: [uuid], onDelete: Cascade)
+  menu      Menu   @relation(fields: [menuId], references: [uuid], onDelete: Cascade)
+
+  @@id([tableId, menuId])
+  @@map("table_menu")
+}
+
+model MenuHours {
+  id        Int       @id @default(autoincrement())
+  menuId    String
+  dayOfWeek Int?
+  date      DateTime? @db.Date
+  opensAt   String
+  closesAt  String
+  menu      Menu      @relation(fields: [menuId], references: [uuid], onDelete: Cascade)
+
+  @@index([menuId, dayOfWeek])
+  @@index([menuId, date])
+  @@map("menu_hours")
+}
+
+model QrCode {
+  uuid           String       @id @default(uuid())
+  restaurantId   String
+  name           String
+  deactivatedAt  DateTime?
+  deletedAt      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  restaurant     Restaurant   @relation(fields: [restaurantId], references: [uuid], onDelete: Cascade)
+  menus          QrCodeMenu[]
+
+  @@index([restaurantId])
+  @@map("qr_code")
+}
+
+model QrCodeMenu {
+  qrCodeId    String
+  menuId      String
+  selectTable Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  qrCode      QrCode   @relation(fields: [qrCodeId], references: [uuid], onDelete: Cascade)
+  menu        Menu     @relation(fields: [menuId], references: [uuid], onDelete: Cascade)
+
+  @@id([qrCodeId, menuId])
+  @@index([qrCodeId, sortOrder])
+  @@map("qr_code_menu")
+}
+
+/// Guest checkout order. Prices/names on items are snapshots at checkout time.
+model Order {
+  uuid            String      @id @default(uuid())
+  restaurantId    String
+  tableId         String?
+  status          OrderStatus @default(PENDING)
+  currency        String      @default("UAH")
+  /// Total in major currency units (e.g. UAH), same scale as menu prices.
+  totalAmount     Decimal     @db.Decimal(12, 2)
+  /// Monobank acquiring invoice id (after create).
+  monoInvoiceId   String?     @unique
+  monoPageUrl     String?
+  paidAt          DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  restaurant      Restaurant  @relation(fields: [restaurantId], references: [uuid], onDelete: Cascade)
+  table           Table?      @relation(fields: [tableId], references: [uuid], onDelete: SetNull)
+  items           OrderItem[]
+
+  @@index([restaurantId, createdAt])
+  @@index([status])
+  @@map("order")
+}
+
+model OrderItem {
+  id           Int       @id @default(autoincrement())
+  orderId      String
+  menuItemId   String?
+  name         String
+  photo        String?
+  unitPrice    Decimal   @db.Decimal(10, 2)
+  quantity     Int
+  order        Order     @relation(fields: [orderId], references: [uuid], onDelete: Cascade)
+  menuItem     MenuItem? @relation(fields: [menuItemId], references: [uuid], onDelete: SetNull)
+
+  @@index([orderId])
+  @@map("order_item")
+}

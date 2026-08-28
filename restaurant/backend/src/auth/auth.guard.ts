@@ -1,0 +1,47 @@
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { Request } from 'express';
+import { AUTH_ERRORS } from './auth.errors';
+import { ITokenPayload, TOKEN_TYPE } from 'src/types/token';
+
+@Injectable()
+export class AuthGuard implements CanActivate {
+  constructor(private readonly jwtService: JwtService) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest<Request>();
+    const token = this.extractTokenFromHeader(request);
+    if (!token) {
+      throw new UnauthorizedException(AUTH_ERRORS.MISSING_ACCESS_TOKEN);
+    }
+    try {
+      const payload = await this.jwtService.verifyAsync<ITokenPayload>(token);
+
+      if (
+        payload.type !== TOKEN_TYPE.ACCESS ||
+        payload.uid == null ||
+        payload.uid === ''
+      ) {
+        throw new UnauthorizedException(AUTH_ERRORS.INVALID_ACCESS_TOKEN);
+      }
+
+      request['user'] = payload;
+    } catch (error: unknown) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new UnauthorizedException(AUTH_ERRORS.INVALID_ACCESS_TOKEN);
+    }
+    return true;
+  }
+
+  private extractTokenFromHeader(request: Request): string | undefined {
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    return type === 'Bearer' ? token : undefined;
+  }
+}

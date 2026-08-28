@@ -1,0 +1,15 @@
+/dist
+/node_modules
+/build
+/coverage
+/.nyc_output
+logs
+*.log
+npm-debug.log*
+.DS_Store
+.idea
+.env
+.env.*.local
+/uploads
+.temp
+.tmp
